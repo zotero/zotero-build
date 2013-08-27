@@ -2,13 +2,11 @@
 import sys
 import os
 import argparse
-import string
-import random
 import tempfile
+import shutil
 import subprocess
 import re
 import fileinput
-import shutil
 from collections import OrderedDict
 import json
 import hashlib
