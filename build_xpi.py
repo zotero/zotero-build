@@ -53,7 +53,7 @@ args = parser.parse_args()
 
 tmp_build_dir = os.path.join(args.tmp_dir, 'zotero-build')
 # Remove tmp build directory if it already exists
-if os.path.exists(tmp_build_dir) and os.path.basename(tmp_build_dir)[0:6] == 'zotero':
+if os.path.exists(tmp_build_dir):
     shutil.rmtree(tmp_build_dir)
 
 def main():
@@ -267,5 +267,5 @@ if __name__ == '__main__':
         main()
     # Clean up
     finally:
-        if os.path.exists(tmp_build_dir) and os.path.basename(tmp_build_dir)[0:6] == 'zotero':
+        if os.path.exists(tmp_build_dir):
             shutil.rmtree(tmp_build_dir)
