@@ -1,0 +1,64 @@
+#!/bin/sh
+
+#
+# Deploy build/zotero-build.xpi as a dev build with a given suffix
+# using build/update-build.rdf as the update manifest.
+#
+
+if [ -z "$1" ]; then
+	echo "Usage: $0 suffix"
+	exit
+fi
+SUFFIX="$1"
+
+. config.sh
+
+if [ -z "$S3BUCKET" ]; then echo '$S3BUCKET not set'; exit; fi
+if [ -z "$RDFPATH" ]; then echo '$RDFPATH not set'; exit; fi
+if [ -z "$DEPLOYCMD" ]; then echo '$DEPLOYCMD not set'; exit; fi
+
+BUILDDIR="build"
+S3PATH="${S3BUCKET}/dev/"
+
+if [ ! -d "$BUILDDIR" ]; then
+	echo "builddir is not a directory"
+fi
+
+XPI="${BUILDDIR}zotero-build.xpi"
+RDF="${BUILDDIR}update-build.rdf"
+
+if [ ! -f "$XPI" ]; then
+	echo "$XPI not found"
+	exit
+fi
+
+if [ ! -f "$RDF" ]; then
+	echo "$RDF not found"
+	exit
+fi
+
+if [ ! -d "$RDFPATH" ]; then
+	echo "$RDFPATH is not a directory"
+	exit
+fi
+
+s3cmd put -m "application/x-xpinstall" "$XPI" s3://${S3PATH}zotero-build.xpi
+s3cmd mv s3://${S3PATH}zotero-build.xpi s3://${S3PATH}zotero-$SUFFIX.xpi
+rm $XPI
+
+echo
+
+# Replace download URL
+echo "Updating download URL"
+echo
+perl -pi -e "s/download.zotero.org\/extension/www.zotero.org\/download/g" $RDF
+grep -C 2 'www.zotero.org/download' $RDF
+
+echo
+
+echo "Moving "$RDF" to ${RDFPATH}update-$SUFFIX.rdf"
+mv "$RDF" "${RDFPATH}update-$SUFFIX.rdf"
+
+echo
+
+$DEPLOYCMD

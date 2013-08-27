@@ -1,0 +1,29 @@
+#!/bin/sh
+
+#
+# Upload build/zotero-build.xpi to S3
+#
+
+. config.sh
+
+if [ -z "$S3BUCKET" ]; then echo '$S3BUCKET not set'; exit; fi
+
+BUILDDIR="build"
+S3PATH="${S3BUCKET}/extension/"
+
+if [ ! -d "$BUILDDIR" ]; then
+	echo "builddir is not a directory"
+fi
+
+XPI="${BUILDDIR}/zotero-build.xpi"
+
+if [ ! -f "$XPI" ]; then
+	echo "$XPI not found"
+fi
+
+s3cmd put -m "application/x-xpinstall" "$XPI" s3://${S3PATH}zotero-build.xpi
+if [ $? != 0 ]; then
+	echo "Error running s3cmd"
+	exit
+fi
+rm $XPI

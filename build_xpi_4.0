@@ -1,0 +1,200 @@
+#!/bin/bash
+if [ -z $1 ]; then
+	echo "Usage: build_xpi builddir [branch='master'] [striprev='0'] [xpisuffix='build'] [rdfsuffix=''] [xpidir=''] [buildsuffix='build']"
+	echo
+	echo "Example: build_xpi build 3.0 1 3.0.1"
+	echo "    - Builds zotero-build.xpi and update-build.rdf in ./build"
+	echo "    - Points install.rdf to zotero.org/download/update.rdf"
+	echo "    - Points update-build.rdf to zotero.org/download/zotero-3.0.1.xpi"
+	echo
+	echo "Example: build_xpi build 3.0 1 3.0b2 beta"
+	echo "    - Builds zotero-build.xpi and update-build.rdf in ./build"
+	echo "    - Points install.rdf to zotero.org/download/update-beta.rdf"
+	echo "    - Points update-build.rdf to zotero.org/download/zotero-3.0b2.xpi"
+	echo
+	echo "Example: build_xpi build master 0 trunk trunk dev"
+	echo "    - Builds zotero-build.xpi and update-build.rdf in ./build"
+	echo "    - Points install.rdf to zotero.org/download/dev/update-trunk.rdf"
+	echo "    - Points update-build.rdf to zotero.org/download/dev/zotero-trunk.xpi"
+	exit
+fi
+
+URL="https://github.com/zotero/zotero"
+
+BUILDDIR="$1" # e.g., "build"
+BRANCH="$2" # e.g. "3.0", defaults to "master"
+STRIPREV="$3"
+XPISUFFIX="$4" # suffix of XPI to reference in update.rdf, defaults to "build"
+RDFSUFFIX="$5" # suffix of update RDF file to reference in install.rdf, leave blank to leave as "update.rdf"
+XPIDIR="$6" # extra directory to point to when referencing the XPI and update RDF, defaults to blank (i.e. zotero.org/download/update*.rdf)
+BUILDSUFFIX="$7" # defaults to "build"
+
+if [ -n "$XPISUFFIX" ]; then XPISUFFIX="-$XPISUFFIX"; else XPISUFFIX="-build"; fi
+if [ -n "$RDFSUFFIX" ]; then RDFSUFFIX="-$RDFSUFFIX"; fi
+if [ -n "$BUILDSUFFIX" ]; then BUILDSUFFIX="-$BUILDSUFFIX"; else BUILDSUFFIX="-build"; fi
+
+RAN=`uuidgen | head -c 8`  # Get random 8-character string for build directory
+TEMPDIR=/tmp/zotero-build-$RAN
+
+if [ ! -d "$BUILDDIR" ]; then
+	echo "$BUILDDIR is not a directory"
+	exit
+fi
+
+if [ ! -d "$BUILDDIR/zotero" ]; then
+	echo "$BUILDDIR/zotero is not a directory"
+	exit
+fi
+
+if [ "1" != "$STRIPREV" ]; then
+	if [ ! -f "$BUILDDIR/lastrev" ]; then
+		echo "$BUILDDIR/lastrev not found"
+		exit
+	fi
+	let REV=`cat $BUILDDIR/lastrev`+1
+fi
+
+cd $BUILDDIR
+BUILDDIR="`pwd`"
+
+cd zotero
+git checkout $BRANCH
+git pull
+git submodule init
+git submodule update
+git submodule foreach git pull origin master
+
+if [ ! -f install.rdf ]; then
+	echo "install.rdf not found -- did you forget a git clone to 'zotero'?"
+	exit
+fi
+
+mkdir $TEMPDIR
+
+# Export a clean copy of the tree
+rsync -a --exclude=".git*" ./ "$TEMPDIR/zotero/"
+
+cd $TEMPDIR/zotero/chrome
+# Checkout failed -- bail
+if [ $? -eq 1 ]; then
+	exit;
+fi
+
+echo "Deleting CSL locale support files"
+find "$TEMPDIR/zotero/chrome/content/zotero/locale/csl/" -mindepth 1 ! -name '*.xml' -print -delete
+
+# Substitute in the current revision
+if [ "1" = "$STRIPREV" ]; then
+	perl -pi -e "s/\.SOURCE//g" content/zotero/xpcom/zotero.js
+else
+	perl -pi -e "s/\.SOURCE/.r$REV/g" content/zotero/xpcom/zotero.js
+fi
+
+cd ..
+
+# Build translators.zip
+if [ -d translators ]; then
+	cd translators
+	mv deleted.txt ..
+	mkdir output
+	counter=0;
+	for file in *.js; do
+		newfile=$counter.js;
+		id=`grep -m 1 '"translatorID"\s*:\s*"' "$file" | sed -r 's/.*"translatorID"\s*:\s*"(.*)".*/\1/'`
+		label=`grep -m 1 '"label"\s*:\s*"' "$file" | sed -r 's/.*"label"\s*:\s*"(.*)".*/\1/'`
+		mtime=`grep -m 1 '"lastUpdated"\s*:\s*"' "$file" | sed -r 's/.*"lastUpdated"\s*:\s*"(.*)".*/\1/'`
+		echo $newfile,$id,$label,$mtime >> ../translators.index		
+		cp "$file" output/$newfile;
+		counter=$(($counter+1))
+	done;
+	cd output
+	zip ../../translators.zip *
+	cd ../..
+	rm -rf translators
+fi
+
+# Build styles.zip with default styles
+if [ -d styles ]; then
+	cd styles
+	rm -f update
+	#for i in `ls *.csl`; do
+	#	rm -f "$i"
+	#	curl -sO "https://raw.github.com/citation-style-language/styles/master/$i"
+	#done
+	zip ../styles.zip *
+	cd ..
+	rm -rf styles
+fi
+
+echo
+echo ======================================================
+echo
+echo Original install.rdf:
+echo
+cat install.rdf
+echo
+echo
+echo Original update.rdf:
+echo
+cat update.rdf
+echo
+echo ======================================================
+echo
+
+# If a source build, substitute in the current revision
+if [ "1" = "$STRIPREV" ]; then
+	perl -pi -e "s/\.SOURCE//g" install.rdf
+	perl -pi -e "s/\.SOURCE//g" update.rdf
+else
+	perl -pi -e "s/\.SOURCE/.r$REV/g" install.rdf
+	perl -pi -e "s/\.SOURCE/.r$REV/g" update.rdf
+fi
+
+if [ $XPIDIR ]; then
+	XPIDIR="$XPIDIR\/"
+fi
+perl -pi -e "s/update-source\.rdf/${XPIDIR}update$RDFSUFFIX.rdf/g" install.rdf
+perl -pi -e "s/zotero\.xpi/${XPIDIR}zotero$XPISUFFIX.xpi/g" update.rdf
+
+# Save with suffix extension to build dir
+mv update.rdf ../update$BUILDSUFFIX.rdf
+zip -r ../zotero$BUILDSUFFIX.xpi .
+
+echo
+echo ======================================================
+echo
+echo Modified install.rdf:
+echo
+cat install.rdf
+echo
+echo
+echo Modified zotero.js
+echo
+cat chrome/content/zotero/xpcom/zotero.js | grep VERSION:
+echo
+
+cd ..
+SHA1=`sha1sum zotero$BUILDSUFFIX.xpi | sed -r -e 's/([^ ]+).*/\1/'`
+perl -pi -e "s/sha1:/sha1:$SHA1/g" update$BUILDSUFFIX.rdf
+
+echo
+echo Modified update.rdf:
+echo
+cat update$BUILDSUFFIX.rdf
+echo
+echo ======================================================
+echo
+
+mv zotero$BUILDSUFFIX.xpi $BUILDDIR
+mv update$BUILDSUFFIX.rdf $BUILDDIR
+cd $BUILDDIR
+rm -rf $TEMPDIR
+
+echo
+echo "zotero$BUILDSUFFIX.xpi and update$BUILDSUFFIX.rdf saved to $BUILDDIR"
+echo
+
+cd ..
+if [ "1" != "$STRIPREV" ]; then
+	echo -n $REV > $BUILDDIR/lastrev
+fi
