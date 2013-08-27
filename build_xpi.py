@@ -180,21 +180,21 @@ Original update.rdf:
 
 ''')
     
+    # Modify install.rdf and update.rdf as necessary
     if args.strip_revision:
-        sub_str = ""
-    # If a source build, substitute in the current revision
+        rev_sub_str = ""
     else:
-        sub_str = "." + str(rev)
+        rev_sub_str = "." + str(rev)
     if args.xpi_dir:
         xpi_dir = args.xpi_dir + '/'
     else:
         xpi_dir = ''
     for line in fileinput.FileInput(install_file, inplace=1):
-        line = line.replace('.SOURCE', sub_str)
+        line = line.replace('.SOURCE', rev_sub_str)
         line = line.replace('update-source.rdf', xpi_dir + 'update' + args.rdf_suffix + '.rdf')
         print(line, file=sys.stdout, end='')
     for line in fileinput.FileInput(update_file, inplace=1):
-        line = line.replace(".SOURCE", sub_str)
+        line = line.replace(".SOURCE", rev_sub_str)
         line = line.replace('zotero.xpi', xpi_dir + 'zotero' + args.xpi_suffix + '.xpi')
         print(line, file=sys.stdout, end='')
     
