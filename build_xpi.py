@@ -13,7 +13,7 @@ from collections import OrderedDict
 import json
 import hashlib
 
-# Combine two argparse formatters
+# Hack to combine two argparse formatters
 class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter):
     pass
 
@@ -64,11 +64,15 @@ def main():
     if args.build_suffix:
         args.build_suffix = "-" + args.build_suffix
     
+    # Use 'build' subdirectory for source files and output
     build_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'build')
     
     if not os.path.isdir(build_dir):
         raise Exception(build_dir + " is not a directory")
     
+    # The dev build revision number is stored in build/lastrev.
+    #
+    # If we're including it, get the current version number and increment it.
     if not args.strip_revision:
         lastrev_file = os.path.join(build_dir, 'lastrev')
         if not os.path.exists(lastrev_file):
@@ -91,6 +95,9 @@ def main():
         subprocess.check_call(['git', 'clone', '--recursive', args.repo_url])
     
     # Check out Zotero code
+    #
+    # Note: This script ignores fixed submodule versions and always pulls
+    # the latest versions.
     subprocess.check_call(['git', 'checkout', args.branch])
     subprocess.check_call('git pull', shell=True)
     subprocess.check_call('git submodule init', shell=True)
