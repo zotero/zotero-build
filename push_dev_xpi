@@ -24,8 +24,8 @@ if [ ! -d "$BUILDDIR" ]; then
 	echo "builddir is not a directory"
 fi
 
-XPI="${BUILDDIR}zotero-build.xpi"
-RDF="${BUILDDIR}update-build.rdf"
+XPI="${BUILDDIR}/zotero-build.xpi"
+RDF="${BUILDDIR}/update-build.rdf"
 
 if [ ! -f "$XPI" ]; then
 	echo "$XPI not found"
