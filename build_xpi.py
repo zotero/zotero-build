@@ -38,8 +38,7 @@ Example: build_xpi -x trunk -r trunk --xpi-dir dev
   - Points update-build.rdf to zotero.org/download/dev/zotero-trunk.xpi''')
 
 parser.add_argument('-b', '--branch', default='master', help='Git branch or tag to build from')
-parser.add_argument('-s', '--strip-revision', dest='strip_revision', action='store_true', help="strip the build revision number from the XPI version")
-parser.set_defaults(strip_revision=False)
+parser.add_argument('-c', '--channel', default='release', help='channel to add to dev build version numbers (e.g., "beta")')
 parser.add_argument('--xpi-suffix', '-x', metavar='SUFFIX', default='build', help='suffix of XPI referenced in update.rdf')
 parser.add_argument('--rdf-suffix', '-r', metavar='SUFFIX', default='', help='suffix of update.rdf file to reference in install.rdf (e.g., "beta" for "update-beta.rdf")')
 parser.add_argument('--xpi-dir', metavar='DIR', default='', help='extra directory to point to when referencing the XPI in update.rdf')
@@ -68,17 +67,6 @@ def main():
     if not os.path.isdir(build_dir):
         raise Exception(build_dir + " is not a directory")
     
-    # The dev build revision number is stored in build/lastrev.
-    #
-    # If we're including it, get the current version number and increment it.
-    if not args.strip_revision:
-        lastrev_file = os.path.join(build_dir, 'lastrev')
-        if not os.path.exists(lastrev_file):
-            raise FileNotFoundError(lastrev_file + " not found")
-        
-        with open(lastrev_file, 'r') as f:
-            rev = int(f.read()) + 1
-    
     # Create 'zotero' directory inside build directory if necessary
     src_dir = os.path.join(build_dir, 'zotero')
     if not os.path.isdir(src_dir):
@@ -104,6 +92,15 @@ def main():
     
     if not os.path.exists('install.rdf'):
         raise FileNotFoundError("install.rdf not found in {0}".format(src_dir))
+    
+    # Extract version number from install.rdf
+    with open('install.rdf') as f:
+        rdf = f.read()
+    m = re.search('version>([0-9].+)\\.SOURCE</', rdf)
+    if not m:
+        raise Exception("Version number not found in install.rdf")
+    version = m.group(1)
+    commit_hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode(encoding="utf-8").strip()
     
     os.mkdir(tmp_build_dir)
     tmp_src_dir = os.path.join(tmp_build_dir, 'zotero')
@@ -179,10 +176,25 @@ Original update.rdf:
 ''')
     
     # Modify install.rdf and update.rdf as necessary
-    if args.strip_revision:
+    
+    # The dev build revision number is stored in build/lastrev.
+    #
+    # If we're including it, get the current version number and increment it.
+    if args.channel != "release":
+        lastrev_file = os.path.join(build_dir, 'lastrev-' + version)
+        if not os.path.exists(lastrev_file):
+            with open(lastrev_file, 'w') as f:
+                f.write("0")
+                rev = 1
+        else:
+            with open(lastrev_file, 'r') as f:
+                rev = int(f.read()) + 1
+
+    
+    if args.channel == "release":
         rev_sub_str = ""
     else:
-        rev_sub_str = "." + str(rev)
+        rev_sub_str = "-{0}.r{1}+{2}".format(args.channel, str(rev), commit_hash)
     if args.xpi_dir:
         xpi_dir = args.xpi_dir + '/'
     else:
@@ -239,7 +251,7 @@ Modified update.rdf:
     log("")
     
     # Update lastrev file with new revision number
-    if not args.strip_revision:
+    if args.channel != "release":
         with open(lastrev_file, 'w') as f:
             f.write(str(rev))
 

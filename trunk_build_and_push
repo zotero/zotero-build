@@ -1,4 +1,0 @@
-rm -f build/*.xpi
-rm -f build/*.rdf
-./build_xpi.py --branch master --xpi-suffix trunk --rdf-suffix trunk --xpi-dir dev
-./push_dev_xpi trunk

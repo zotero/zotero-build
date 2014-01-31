@@ -1,18 +1,18 @@
 #!/bin/bash
 if [ -z $1 ]; then
-	echo "Usage: build_xpi builddir [branch='master'] [striprev='0'] [xpisuffix='build'] [rdfsuffix=''] [xpidir=''] [buildsuffix='build']"
+	echo "Usage: build_xpi builddir [branch='master'] [channel='release'] [xpisuffix='build'] [rdfsuffix=''] [xpidir=''] [buildsuffix='build']"
 	echo
-	echo "Example: build_xpi build 3.0 1 3.0.1"
+	echo "Example: build_xpi build 3.0 release 3.0.1"
 	echo "    - Builds zotero-build.xpi and update-build.rdf in ./build"
 	echo "    - Points install.rdf to zotero.org/download/update.rdf"
 	echo "    - Points update-build.rdf to zotero.org/download/zotero-3.0.1.xpi"
 	echo
-	echo "Example: build_xpi build 3.0 1 3.0b2 beta"
+	echo "Example: build_xpi build 3.0 release 3.0b2 beta"
 	echo "    - Builds zotero-build.xpi and update-build.rdf in ./build"
 	echo "    - Points install.rdf to zotero.org/download/update-beta.rdf"
 	echo "    - Points update-build.rdf to zotero.org/download/zotero-3.0b2.xpi"
 	echo
-	echo "Example: build_xpi build master 0 trunk trunk dev"
+	echo "Example: build_xpi build master beta trunk trunk dev"
 	echo "    - Builds zotero-build.xpi and update-build.rdf in ./build"
 	echo "    - Points install.rdf to zotero.org/download/dev/update-trunk.rdf"
 	echo "    - Points update-build.rdf to zotero.org/download/dev/zotero-trunk.xpi"
@@ -23,12 +23,13 @@ URL="https://github.com/zotero/zotero"
 
 BUILDDIR="$1" # e.g., "build"
 BRANCH="$2" # e.g. "3.0", defaults to "master"
-STRIPREV="$3"
+CHANNEL="$3" # e.g, "beta", defaults to "release", which strips the revision number and build info
 XPISUFFIX="$4" # suffix of XPI to reference in update.rdf, defaults to "build"
 RDFSUFFIX="$5" # suffix of update RDF file to reference in install.rdf, leave blank to leave as "update.rdf"
 XPIDIR="$6" # extra directory to point to when referencing the XPI and update RDF, defaults to blank (i.e. zotero.org/download/update*.rdf)
 BUILDSUFFIX="$7" # defaults to "build"
 
+if [ -z "$CHANNEL" ]; then CHANNEL="release"; fi
 if [ -n "$XPISUFFIX" ]; then XPISUFFIX="-$XPISUFFIX"; else XPISUFFIX="-build"; fi
 if [ -n "$RDFSUFFIX" ]; then RDFSUFFIX="-$RDFSUFFIX"; fi
 if [ -n "$BUILDSUFFIX" ]; then BUILDSUFFIX="-$BUILDSUFFIX"; else BUILDSUFFIX="-build"; fi
@@ -46,14 +47,6 @@ if [ ! -d "$BUILDDIR/zotero" ]; then
 	exit
 fi
 
-if [ "1" != "$STRIPREV" ]; then
-	if [ ! -f "$BUILDDIR/lastrev" ]; then
-		echo "$BUILDDIR/lastrev not found"
-		exit
-	fi
-	let REV=`cat $BUILDDIR/lastrev`+1
-fi
-
 cd $BUILDDIR
 BUILDDIR="`pwd`"
 
@@ -66,8 +59,15 @@ git submodule foreach git pull origin master
 
 if [ ! -f install.rdf ]; then
 	echo "install.rdf not found -- did you forget a git clone to 'zotero'?"
-	exit
+	exit 1
 fi
+
+VERSION=`cat install.rdf | sed -n -r 's/.+version>([0-9].+)\.SOURCE<.+/\1/gp'`
+if [ -z "$VERSION" ]; then
+	echo "Version number not found in install.rdf"
+	exit 1
+fi
+HASH=`git rev-parse --short HEAD`
 
 mkdir $TEMPDIR
 
@@ -83,11 +83,19 @@ fi
 echo "Deleting CSL locale support files"
 find "$TEMPDIR/zotero/chrome/content/zotero/locale/csl/" -mindepth 1 ! -name '*.xml' -print -delete
 
+# Generate revision number for version
+if [ "$CHANNEL" != "release" ]; then
+	if [ ! -f "$BUILDDIR/lastrev-$VERSION" ]; then
+		touch "$BUILDDIR/lastrev-$VERSION"
+	fi
+	let REV=`cat $BUILDDIR/lastrev-$VERSION`+1
+fi
+
 # Substitute in the current revision
-if [ "1" = "$STRIPREV" ]; then
+if [ "$CHANNEL" = "release" ]; then
 	perl -pi -e "s/\.SOURCE//g" content/zotero/xpcom/zotero.js
 else
-	perl -pi -e "s/\.SOURCE/.r$REV/g" content/zotero/xpcom/zotero.js
+	perl -pi -e "s/\.SOURCE/-$CHANNEL.r$REV+$HASH/g" content/zotero/xpcom/zotero.js
 fi
 
 cd ..
@@ -142,12 +150,12 @@ echo ======================================================
 echo
 
 # If a source build, substitute in the current revision
-if [ "1" = "$STRIPREV" ]; then
+if [ "$CHANNEL" = "release" ]; then
 	perl -pi -e "s/\.SOURCE//g" install.rdf
 	perl -pi -e "s/\.SOURCE//g" update.rdf
 else
-	perl -pi -e "s/\.SOURCE/.r$REV/g" install.rdf
-	perl -pi -e "s/\.SOURCE/.r$REV/g" update.rdf
+	perl -pi -e "s/\.SOURCE/-$CHANNEL.r$REV+$HASH/g" install.rdf
+	perl -pi -e "s/\.SOURCE/-$CHANNEL.r$REV+$HASH/g" update.rdf
 fi
 
 if [ $XPIDIR ]; then
@@ -195,6 +203,6 @@ echo "zotero$BUILDSUFFIX.xpi and update$BUILDSUFFIX.rdf saved to $BUILDDIR"
 echo
 
 cd ..
-if [ "1" != "$STRIPREV" ]; then
-	echo -n $REV > $BUILDDIR/lastrev
+if [ "$CHANNEL" != "release" ]; then
+	echo -n $REV > $BUILDDIR/lastrev-$VERSION
 fi

@@ -1,0 +1,5 @@
+#!/bin/sh
+rm -f build/*.xpi
+rm -f build/*.rdf
+./build_xpi_4.0 build 4.0 beta 4.0-beta 4.0-branch dev
+./push_dev_xpi 4.0-beta 4.0-branch

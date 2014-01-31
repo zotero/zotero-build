@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 #
 # Upload build/zotero-build.xpi to S3
@@ -21,9 +21,9 @@ if [ ! -f "$XPI" ]; then
 	echo "$XPI not found"
 fi
 
-s3cmd put -m "application/x-xpinstall" "$XPI" s3://${S3PATH}zotero-build.xpi
+aws s3 cp --content-type application/x-xpinstall "$XPI" s3://${S3PATH}zotero-build.xpi
 if [ $? != 0 ]; then
-	echo "Error running s3cmd"
+	echo "Error running aws s3"
 	exit
 fi
 rm $XPI
