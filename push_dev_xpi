@@ -10,7 +10,7 @@ if [[ -z "$1" || -z "$2" ]]; then
 	exit
 fi
 XPISUFFIX="$1"
-RDFSUFFIX="$1"
+RDFSUFFIX="$2"
 
 . config.sh
 

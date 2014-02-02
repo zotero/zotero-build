@@ -86,7 +86,7 @@ find "$TEMPDIR/zotero/chrome/content/zotero/locale/csl/" -mindepth 1 ! -name '*.
 # Generate revision number for version
 if [ "$CHANNEL" != "release" ]; then
 	if [ ! -f "$BUILDDIR/lastrev-$VERSION" ]; then
-		touch "$BUILDDIR/lastrev-$VERSION"
+		echo "0" > "$BUILDDIR/lastrev-$VERSION"
 	fi
 	let REV=`cat $BUILDDIR/lastrev-$VERSION`+1
 fi
