@@ -93,9 +93,9 @@ fi
 
 # Substitute in the current revision
 if [ "$CHANNEL" = "release" ]; then
-	perl -pi -e "s/\.SOURCE//g" content/zotero/xpcom/zotero.js
+	perl -pi -e "s/\.SOURCE//g" $TEMPDIR/zotero/resource/config.js
 else
-	perl -pi -e "s/\.SOURCE/-$CHANNEL.r$REV+$HASH/g" content/zotero/xpcom/zotero.js
+	perl -pi -e "s/\.SOURCE/-$CHANNEL.r$REV+$HASH/g" $TEMPDIR/zotero/resource/config.js
 fi
 
 cd ..
@@ -176,9 +176,9 @@ echo
 cat install.rdf
 echo
 echo
-echo Modified zotero.js
+echo Modified config.js
 echo
-cat chrome/content/zotero/xpcom/zotero.js | grep VERSION:
+cat resource/config.js | grep VERSION:
 echo
 
 cd ..
