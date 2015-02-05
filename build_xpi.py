@@ -116,7 +116,7 @@ def main():
     log("Deleting CSL locale support files")
     subprocess.check_call(['find',
         os.path.normpath(tmp_src_dir + '/chrome/content/zotero/locale/csl/'),
-        '-mindepth', '1', '!', '-name', '*.xml', '-print', '-delete'])
+        '-mindepth', '1', '!', '-name', '*.xml', '!', '-name', 'locales.json', '-print', '-delete'])
     
     translators_dir = os.path.join(tmp_src_dir, 'translators')
     translators_temp_dir = os.path.join(tmp_src_dir, 'translators2')
