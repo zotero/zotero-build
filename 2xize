@@ -1,0 +1,57 @@
+#!/usr/bin/env python
+from __future__ import print_function
+import sys
+import os
+import re
+
+def append2x(content, dir):
+    header = "/* BEGIN 2X BLOCK -- DO NOT EDIT MANUALLY -- USE 2XIZE */\n"
+    output = "@media (min-resolution: 1.5dppx) {\n"
+    for line in content.split("\n"):
+        matches = re.match('(.+chrome://zotero/skin/)(.+\.png)(.+)', line)
+        
+        if not matches:
+            output += line
+            continue
+        
+        png = matches.group(2)
+        png2x = png.replace('.png', '@2x.png')
+        
+        if os.path.exists(os.path.join(root_dir, png2x)):
+            output += matches.group(1) + png2x + matches.group(3)
+        else:
+            output += line
+    output += "}"
+    output = re.sub("\s+", " ", output)
+    output = re.sub("}", "}\n", output)
+    output = re.sub("/\*[^*]+\*/", "", output)
+    # Remove all blocks without 2x rules
+    output = "\n".join([line for line in output.split("\n") if "2x.png" in line])
+    return header + output + "\n"
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("""Appends 2x image rules to a CSS file for all images with @2x.png versions in the same directory
+
+Usage: {0} /path/to/css/file""".format(sys.argv[0]))
+        sys.exit(1)
+    
+    css_file = sys.argv[1]
+    if not os.path.exists(css_file):
+        print("File not found: " + css_file)
+        sys.exit(1)
+    
+    root_dir = os.path.dirname(os.path.realpath(css_file))
+    
+    css = ""
+    with open(css_file) as f:
+        for line in f:
+            if "BEGIN 2X BLOCK" in line:
+                break
+            css += line
+    css = css.strip()
+    
+    css += "\n\n\n" + append2x(css, root_dir)
+    
+    with open(css_file, 'w') as f:
+        f.write(css)
