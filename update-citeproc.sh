@@ -12,6 +12,6 @@ if [ ! -e "$outFile" ]; then
 fi
 
 echo "/*" > "$outFile"
-wget -O - https://bitbucket.org/fbennett/citeproc-js/raw/default/LICENSE | sed -e 's/^/ * /' >> "$outFile"
-echo -e " */\n" >> "$outFile"
-wget -O - https://bitbucket.org/fbennett/citeproc-js/raw/default/citeproc.js >> "$outFile"
+curl https://bitbucket.org/fbennett/citeproc-js/raw/default/LICENSE | sed -e $'s/\r$//' | sed -e 's/^/ * /' >> "$outFile"
+echo " */" >> "$outFile"
+curl https://bitbucket.org/fbennett/citeproc-js/raw/default/citeproc.js >> "$outFile"
