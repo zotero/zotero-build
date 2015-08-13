@@ -118,6 +118,8 @@ def main():
         os.path.normpath(tmp_src_dir + '/chrome/content/zotero/locale/csl/'),
         '-mindepth', '1', '!', '-name', '*.xml', '!', '-name', 'locales.json', '-print', '-delete'])
     
+    # TODO: Delete test files
+    
     translators_dir = os.path.join(tmp_src_dir, 'translators')
     translators_temp_dir = os.path.join(tmp_src_dir, 'translators2')
     os.mkdir(translators_temp_dir)

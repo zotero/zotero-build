@@ -101,6 +101,10 @@ fi
 
 cd ..
 
+# Delete test files
+rm .travis.yml
+rm -rf test
+
 # Add FW header and footer
 echo "/*********************** BEGIN FRAMEWORK ***********************/" > $BUILDDIR/fw.js
 cat $ROOTDIR/zotero-transfw/framework.js >> $BUILDDIR/fw.js
