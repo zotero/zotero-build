@@ -1,18 +1,18 @@
-#!/bin/bash
+#!/bin/bash -e
 if [ -z $1 ]; then
-	echo "Usage: build_xpi builddir [branch='master'] [channel='release'] [xpisuffix='build'] [rdfsuffix=''] [xpidir=''] [buildsuffix='build']"
+	echo "Usage: build_xpi [branch='master'] [channel='release'] [xpisuffix='build'] [rdfsuffix=''] [xpidir=''] [buildsuffix='build']"
 	echo
-	echo "Example: build_xpi build 3.0 release 3.0.1"
+	echo "Example: build_xpi 3.0 release 3.0.1"
 	echo "    - Builds zotero-build.xpi and update-build.rdf in ./build"
 	echo "    - Points install.rdf to zotero.org/download/update.rdf"
 	echo "    - Points update-build.rdf to zotero.org/download/zotero-3.0.1.xpi"
 	echo
-	echo "Example: build_xpi build 3.0 release 3.0b2 beta"
+	echo "Example: build_xpi 3.0 release 3.0b2 beta"
 	echo "    - Builds zotero-build.xpi and update-build.rdf in ./build"
 	echo "    - Points install.rdf to zotero.org/download/update-beta.rdf"
 	echo "    - Points update-build.rdf to zotero.org/download/zotero-3.0b2.xpi"
 	echo
-	echo "Example: build_xpi build master beta trunk trunk dev"
+	echo "Example: build_xpi master beta trunk trunk dev"
 	echo "    - Builds zotero-build.xpi and update-build.rdf in ./build"
 	echo "    - Points install.rdf to zotero.org/download/dev/update-trunk.rdf"
 	echo "    - Points update-build.rdf to zotero.org/download/dev/zotero-trunk.xpi"
@@ -21,13 +21,14 @@ fi
 
 URL="https://github.com/zotero/zotero"
 
-BUILDDIR="$1" # e.g., "build"
-BRANCH="$2" # e.g. "3.0", defaults to "master"
-CHANNEL="$3" # e.g, "beta", defaults to "release", which strips the revision number and build info
-XPISUFFIX="$4" # suffix of XPI to reference in update.rdf, defaults to "build"
-RDFSUFFIX="$5" # suffix of update RDF file to reference in install.rdf, leave blank to leave as "update.rdf"
-XPIDIR="$6" # extra directory to point to when referencing the XPI and update RDF, defaults to blank (i.e. zotero.org/download/update*.rdf)
-BUILDSUFFIX="$7" # defaults to "build"
+ROOTDIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+BUILDDIR="$ROOTDIR/build"
+BRANCH="$1" # e.g. "3.0", defaults to "master"
+CHANNEL="$2" # e.g, "beta", defaults to "release", which strips the revision number and build info
+XPISUFFIX="$3" # suffix of XPI to reference in update.rdf, defaults to "build"
+RDFSUFFIX="$4" # suffix of update RDF file to reference in install.rdf, leave blank to leave as "update.rdf"
+XPIDIR="$5" # extra directory to point to when referencing the XPI and update RDF, defaults to blank (i.e. zotero.org/download/update*.rdf)
+BUILDSUFFIX="$6" # defaults to "build"
 
 if [ -z "$CHANNEL" ]; then CHANNEL="release"; fi
 if [ -n "$XPISUFFIX" ]; then XPISUFFIX="-$XPISUFFIX"; else XPISUFFIX="-build"; fi
@@ -100,6 +101,11 @@ fi
 
 cd ..
 
+# Add FW header and footer
+echo "/*********************** BEGIN FRAMEWORK ***********************/" > $BUILDDIR/fw.js
+cat $ROOTDIR/zotero-transfw/framework.js >> $BUILDDIR/fw.js
+echo "/*********************** END FRAMEWORK ***********************/" >> $BUILDDIR/fw.js
+
 # Build translators.zip
 if [ -d translators ]; then
 	cd translators
@@ -116,6 +122,13 @@ if [ -d translators ]; then
 		counter=$(($counter+1))
 	done;
 	cd output
+	
+	# Substitute FW line with unminified source for AMO review
+	cp $BUILDDIR/fw.js .
+	perl -pe 's/.+FW LINE.+/`cat fw.js`/ge' -i *.js
+	rm fw.js
+	rm $BUILDDIR/fw.js
+	
 	zip ../../translators.zip *
 	cd ../..
 	rm -rf translators

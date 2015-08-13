@@ -150,6 +150,8 @@ def main():
         
         i += 1
     
+    # TODO: Unminify translator FW lines
+    
     with open(os.path.join(tmp_src_dir, 'translators.json'), 'w') as f:
         json.dump(index, f, indent=True, ensure_ascii=False)
     
