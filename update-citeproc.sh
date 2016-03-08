@@ -11,7 +11,6 @@ if [ ! -e "$outFile" ]; then
 	exit 78 # EX_CONFIG: configuration error (from sysexits.h)
 fi
 
-echo "/*" > "$outFile"
-curl https://raw.githubusercontent.com/Juris-M/citeproc-js/master/LICENSE | sed -e $'s/\r$//' | sed -e 's/^/ * /' >> "$outFile"
-echo " */" >> "$outFile"
+curl https://raw.githubusercontent.com/Juris-M/citeproc-js/master/LICENSE > "$outFile"
+echo >> "$outFile"
 curl https://raw.githubusercontent.com/Juris-M/citeproc-js/master/citeproc.js >> "$outFile"
