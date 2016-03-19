@@ -11,6 +11,16 @@ if [ ! -e "$outFile" ]; then
 	exit 78 # EX_CONFIG: configuration error (from sysexits.h)
 fi
 
-curl https://raw.githubusercontent.com/Juris-M/citeproc-js/master/LICENSE > "$outFile"
-echo >> "$outFile"
-curl https://raw.githubusercontent.com/Juris-M/citeproc-js/master/citeproc.js >> "$outFile"
+curl https://raw.githubusercontent.com/Juris-M/citeproc-js/master/citeproc.js > "$outFile"
+
+echo
+
+if [ `command -v js` ]; then
+	echo "Verifying file..."
+	js -C "$outFile"
+	if [ $? = 0 ]; then
+		echo "OK"
+	fi
+else
+	echo "Warning: js isn't installed -- not verifying file"
+fi
