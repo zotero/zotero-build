@@ -81,14 +81,12 @@ def main():
         subprocess.check_call(['git', 'clone', '--recursive', args.repo_url])
     
     # Check out Zotero code
-    #
-    # Note: This script ignores fixed submodule versions and always pulls
-    # the latest versions.
     subprocess.check_call(['git', 'checkout', args.branch])
     subprocess.check_call('git pull', shell=True)
     subprocess.check_call('git submodule init', shell=True)
     subprocess.check_call('git submodule update', shell=True)
-    subprocess.check_call('git submodule foreach git pull origin master', shell=True)
+    # Uncomment to ignore fixed submodule versions and always pull latest versions
+    #subprocess.check_call('git submodule foreach git pull origin master', shell=True)
     
     if not os.path.exists('install.rdf'):
         raise FileNotFoundError("install.rdf not found in {0}".format(src_dir))
