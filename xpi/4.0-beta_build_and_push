@@ -1,5 +1,6 @@
-#!/bin/sh -e
-rm -f build/*.xpi
-rm -f build/*.rdf
+#!/bin/bash -e
+rm -f $BUILD_DIR/*.xpi
+rm -f $BUILD_DIR/*.rdf
 ./build_xpi_4.0 4.0 beta 4.0-beta 4.0-branch dev
+./sign_xpi
 ./push_dev_xpi 4.0-beta 4.0-branch
