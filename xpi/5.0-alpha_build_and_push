@@ -1,5 +1,5 @@
-#!/bin/sh
-rm -f build/*.xpi
-rm -f build/*.rdf
-./build_xpi.py --branch master --channel alpha --xpi-suffix 4.1-alpha --rdf-suffix 4.1-branch --xpi-dir dev
-./push_dev_xpi 4.1-alpha 4.1-branch
+#!/bin/bash -e
+rm -f $BUILD_DIR/*.xpi
+rm -f $BUILD_DIR/*.rdf
+./build_xpi --branch master --channel alpha --xpi-suffix 5.0-alpha --rdf-suffix 5.0-branch --xpi-dir dev
+./push_dev_xpi 5.0-alpha 5.0-branch
