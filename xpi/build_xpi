@@ -120,7 +120,12 @@ def main():
         
         # Export a clean copy of the source tree
         subprocess.check_call([
-            'rsync', '-a', '--exclude', '.git*', '.' + os.sep, tmp_src_dir + os.sep
+            'rsync',
+            '-a',
+            # Exclude hidden files
+            '--exclude', '.*',
+            '.' + os.sep,
+            tmp_src_dir + os.sep
         ])
         
         # Make sure rsync worked
@@ -140,7 +145,6 @@ def main():
         ])
         
         # Delete test files
-        os.remove(os.path.join(tmp_src_dir, '.travis.yml'))
         shutil.rmtree(os.path.join(tmp_src_dir, 'test'))
         
         # Delete styles build script
