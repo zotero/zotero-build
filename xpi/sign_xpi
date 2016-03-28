@@ -14,14 +14,32 @@ if unzip -l zotero-build.xpi | grep --quiet META-INF; then
 	exit 1
 fi
 
-rm -f *-fx.xpi
-$ROOT_DIR/jpm/bin/jpm sign --api-key $AMO_KEY --api-secret $AMO_SECRET --xpi "$XPI_FILE"
+if [ -z "$1" ]; then
+	if ls *-fx.xpi 1> /dev/null 2>&1; then
+		echo "Signed XPI already downloaded -- pass file path to process"
+		exit 1
+	fi
+	
+	$ROOT_DIR/jpm/bin/jpm sign --api-key $AMO_KEY --api-secret $AMO_SECRET --xpi "$XPI_FILE"
+	
+	XPI_FILE_SIGNED="`ls *-fx.xpi`"
+else
+	XPI_FILE_SIGNED="`basename $(echo -n $1)`"
 
-XPI_FILE_SIGNED="`ls *-fx.xpi`"
+	if [ ! -f "$XPI_FILE_SIGNED" ]; then
+		echo "$XPI_FILE_SIGNED not found"
+		exit 1
+	fi
+fi
 
 unzip -t "$XPI_FILE_SIGNED" > /dev/null
 if [ $? -gt 0 ]; then
-	>&2 echo "Downloaded XPI was not a ZIP file"
+	echo "Downloaded XPI was not a ZIP file!"
+	exit 1
+fi
+
+if ! unzip -l "$XPI_FILE_SIGNED" | grep --quiet META-INF; then
+	echo "Downloaded XPI was not signed!"
 	exit 1
 fi
 
