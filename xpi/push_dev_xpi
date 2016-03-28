@@ -45,10 +45,12 @@ rm $XPI
 
 echo
 
-# Replace download URL
+# Replace download URL. Since dev XPIs change without changing filenames,
+# they can't be served from CloudFront. Instead, install.rdf points to
+# zotero.org, which redirects to a direct S3 URL.
 echo "Updating download URL"
 echo
-perl -pi -e "s/download.zotero.org\/extension/www.zotero.org\/download/g" $RDF
+perl -pi -e "s/http:\/\/download.zotero.org\/extension/https:\/\/www.zotero.org\/download/g" $RDF
 grep -C 2 'www.zotero.org/download' $RDF
 
 echo
