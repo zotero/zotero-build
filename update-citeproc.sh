@@ -17,7 +17,7 @@ echo
 
 if [ `command -v js` ]; then
 	echo "Verifying file..."
-	js -C "$outFile"
+	js -c "$outFile"
 	if [ $? = 0 ]; then
 		echo "OK"
 	fi
