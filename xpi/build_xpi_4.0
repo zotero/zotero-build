@@ -59,6 +59,11 @@ fi
 cd $BUILDDIR
 BUILDDIR="`pwd`"
 
+function cleanup {
+	rm -rf $TEMPDIR
+}
+trap cleanup EXIT
+
 cd zotero
 git checkout $BRANCH
 git pull
