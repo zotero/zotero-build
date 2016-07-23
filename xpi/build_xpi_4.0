@@ -19,6 +19,14 @@ if [ -z $1 ]; then
 	exit
 fi
 
+# Use GNU sed on OS X
+# - Can be installed with `brew install gnu-sed`
+if [ "`uname`" = "Darwin" ]; then
+	SED_CMD=gsed
+else
+	SED_CMD=sed
+fi
+
 URL="https://github.com/zotero/zotero"
 
 ROOTDIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
@@ -64,7 +72,7 @@ if [ ! -f install.rdf ]; then
 	exit 1
 fi
 
-VERSION=`cat install.rdf | sed -n -r 's/.+version>([0-9].+)\.SOURCE<.+/\1/gp'`
+VERSION=`cat install.rdf | $SED_CMD -n -r 's/.+version>([0-9].+)\.SOURCE<.+/\1/gp'`
 if [ -z "$VERSION" ]; then
 	echo "Version number not found in install.rdf"
 	exit 1
@@ -119,9 +127,9 @@ if [ -d translators ]; then
 	counter=0;
 	for file in *.js; do
 		newfile=$counter.js;
-		id=`grep -m 1 '"translatorID"\s*:\s*"' "$file" | sed -r 's/.*"translatorID"\s*:\s*"(.*)".*/\1/'`
-		label=`grep -m 1 '"label"\s*:\s*"' "$file" | sed -r 's/.*"label"\s*:\s*"(.*)".*/\1/'`
-		mtime=`grep -m 1 '"lastUpdated"\s*:\s*"' "$file" | sed -r 's/.*"lastUpdated"\s*:\s*"(.*)".*/\1/'`
+		id=`grep -m 1 '"translatorID"\s*:\s*"' "$file" | $SED_CMD -r 's/.*"translatorID"\s*:\s*"(.*)".*/\1/'`
+		label=`grep -m 1 '"label"\s*:\s*"' "$file" | $SED_CMD -r 's/.*"label"\s*:\s*"(.*)".*/\1/'`
+		mtime=`grep -m 1 '"lastUpdated"\s*:\s*"' "$file" | $SED_CMD -r 's/.*"lastUpdated"\s*:\s*"(.*)".*/\1/'`
 		echo $newfile,$id,$label,$mtime >> ../translators.index		
 		cp "$file" output/$newfile;
 		counter=$(($counter+1))
@@ -200,7 +208,7 @@ cat resource/config.js | grep VERSION:
 echo
 
 cd ..
-SHA1=`sha1sum zotero$BUILDSUFFIX.xpi | sed -r -e 's/([^ ]+).*/\1/'`
+SHA1=`shasum zotero$BUILDSUFFIX.xpi | cut -d' ' -f1`
 perl -pi -e "s/sha1:/sha1:$SHA1/g" update$BUILDSUFFIX.rdf
 
 echo
