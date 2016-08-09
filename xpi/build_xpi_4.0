@@ -100,7 +100,7 @@ if [ $? -eq 1 ]; then
 fi
 
 echo "Deleting CSL locale support files"
-find "$TEMPDIR/zotero/chrome/content/zotero/locale/csl/" -mindepth 1 ! -name '*.xml' ! -name locales.json -print -delete
+find "$TEMPDIR/zotero/chrome/content/zotero/locale/csl" -mindepth 1 ! -name '*.xml' ! -name locales.json -print -delete
 
 # Generate revision number for version
 if [[ "$CHANNEL" != "release" ]] && [[ "$CHANNEL" != "source" ]]; then
