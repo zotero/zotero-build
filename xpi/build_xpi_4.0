@@ -106,7 +106,7 @@ echo "Deleting CSL locale support files"
 find "$TEMPDIR/zotero/chrome/content/zotero/locale/csl/" -mindepth 1 ! -name '*.xml' ! -name locales.json -print -delete
 
 # Generate revision number for version
-if [ "$CHANNEL" != "release" ]; then
+if [[ "$CHANNEL" != "release" ]] && [[ "$CHANNEL" != "source" ]]; then
 	if [ ! -f "$BUILDDIR/lastrev-$VERSION" ]; then
 		echo "0" > "$BUILDDIR/lastrev-$VERSION"
 	fi
@@ -116,6 +116,8 @@ fi
 # Substitute in the current revision
 if [ "$CHANNEL" = "release" ]; then
 	perl -pi -e "s/\.SOURCE//g" $TEMPDIR/zotero/resource/config.js
+elif [ "$CHANNEL" = "release" ]; then
+	perl -pi -e "s/\.SOURCE/-$CHANNEL.$HASH/g" $TEMPDIR/zotero/resource/config.js
 else
 	perl -pi -e "s/\.SOURCE/-$CHANNEL.r$REV+$HASH/g" $TEMPDIR/zotero/resource/config.js
 fi
@@ -191,6 +193,9 @@ echo
 if [ "$CHANNEL" = "release" ]; then
 	perl -pi -e "s/\.SOURCE//g" install.rdf
 	perl -pi -e "s/\.SOURCE//g" update.rdf
+elif [ "$CHANNEL" = "source" ]; then
+	perl -pi -e "s/\.SOURCE/.SOURCE.$HASH/g" install.rdf
+	perl -pi -e "s/\.SOURCE/.SOURCE.$HASH/g" update.rdf
 else
 	perl -pi -e "s/\.SOURCE/-$CHANNEL.r$REV+$HASH/g" install.rdf
 	perl -pi -e "s/\.SOURCE/-$CHANNEL.r$REV+$HASH/g" update.rdf
