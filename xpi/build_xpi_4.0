@@ -43,8 +43,7 @@ if [ -n "$XPISUFFIX" ]; then XPISUFFIX="-$XPISUFFIX"; else XPISUFFIX="-build"; f
 if [ -n "$RDFSUFFIX" ]; then RDFSUFFIX="-$RDFSUFFIX"; fi
 if [ -n "$BUILDSUFFIX" ]; then BUILDSUFFIX="-$BUILDSUFFIX"; else BUILDSUFFIX="-build"; fi
 
-RAN=`uuidgen | head -c 8`  # Get random 8-character string for build directory
-TEMPDIR=/tmp/zotero-build-$RAN
+TEMPDIR=`mktemp -d`
 
 if [ ! -d "$BUILDDIR" ]; then
 	echo "$BUILDDIR is not a directory"
@@ -90,8 +89,6 @@ if [ -z "$VERSION" ]; then
 	exit 1
 fi
 HASH=`git -C "$REPO_DIR" rev-parse --short HEAD`
-
-mkdir $TEMPDIR
 
 # Export a clean copy of the tree
 rsync -a --exclude=".git*" "$REPO_DIR/" "$TEMPDIR/zotero/"
