@@ -68,19 +68,19 @@ cd zotero
 if [ -d "$BRANCH" ]; then
 	REPO_DIR="$BRANCH"
 else
+	REPO_DIR="`pwd`"
+	
+	if [ ! -f "$REPO_DIR/install.rdf" ]; then
+		echo "$REPO_DIR/install.rdf not found -- did you forget a git clone to 'zotero'?"
+		exit 1
+	fi
+	
 	git checkout $BRANCH
 	git pull
 	git submodule init
 	git submodule update
 	# Uncomment to ignore fixed submodule versions and always pull latest versions
 	#git submodule foreach git pull origin master
-	
-	REPO_DIR="`pwd`"
-fi
-
-if [ ! -f "$REPO_DIR/install.rdf" ]; then
-	echo "$REPO_DIR/install.rdf not found -- did you forget a git clone to 'zotero'?"
-	exit 1
 fi
 
 VERSION=`cat "$REPO_DIR/install.rdf" | $SED_CMD -n -r 's/.+version>([0-9].+)\.SOURCE<.+/\1/gp'`
