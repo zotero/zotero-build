@@ -19,14 +19,6 @@ if [ -z $1 ]; then
 	exit
 fi
 
-# Use GNU sed on OS X
-# - Can be installed with `brew install gnu-sed`
-if [ "`uname`" = "Darwin" ]; then
-	SED_CMD=gsed
-else
-	SED_CMD=sed
-fi
-
 URL="https://github.com/zotero/zotero"
 
 ROOTDIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
@@ -83,7 +75,7 @@ else
 	#git submodule foreach git pull origin master
 fi
 
-VERSION=`cat "$REPO_DIR/install.rdf" | $SED_CMD -n -r 's/.+version>([0-9].+)\.SOURCE<.+/\1/gp'`
+VERSION=`perl -ne 'print and last if s/.*<em:version>(.*)\.SOURCE<\/em:version>.*/\1/;' "$REPO_DIR/install.rdf"`
 if [ -z "$VERSION" ]; then
 	echo "Version number not found in install.rdf"
 	exit 1
@@ -138,9 +130,9 @@ if [ -d translators ]; then
 	counter=0;
 	for file in *.js; do
 		newfile=$counter.js;
-		id=`grep -m 1 '"translatorID"\s*:\s*"' "$file" | $SED_CMD -r 's/.*"translatorID"\s*:\s*"(.*)".*/\1/'`
-		label=`grep -m 1 '"label"\s*:\s*"' "$file" | $SED_CMD -r 's/.*"label"\s*:\s*"(.*)".*/\1/'`
-		mtime=`grep -m 1 '"lastUpdated"\s*:\s*"' "$file" | $SED_CMD -r 's/.*"lastUpdated"\s*:\s*"(.*)".*/\1/'`
+		id=`grep -m 1 '"translatorID"\s*:\s*"' "$file" | perl -ne 'print and last if s/.*"translatorID"\s*:\s*"(.*)".*/\1/'`
+		label=`grep -m 1 '"label"\s*:\s*"' "$file" | perl -ne 'print and last if s/.*"label"\s*:\s*"(.*)".*/\1/'`
+		mtime=`grep -m 1 '"lastUpdated"\s*:\s*"' "$file" | perl -ne 'print and last if s/.*"lastUpdated"\s*:\s*"(.*)".*/\1/'`
 		echo $newfile,$id,$label,$mtime >> ../translators.index		
 		cp "$file" output/$newfile;
 		counter=$(($counter+1))
