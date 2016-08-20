@@ -39,12 +39,7 @@ TEMPDIR=`mktemp -d`
 
 if [ ! -d "$BUILDDIR" ]; then
 	echo "$BUILDDIR is not a directory"
-	exit
-fi
-
-if [ ! -d "$BUILDDIR/zotero" ]; then
-	echo "$BUILDDIR/zotero is not a directory"
-	exit
+	exit 1
 fi
 
 cd $BUILDDIR
@@ -55,15 +50,18 @@ function cleanup {
 }
 trap cleanup EXIT
 
-cd zotero
-
 if [ -d "$BRANCH" ]; then
 	REPO_DIR="$BRANCH"
 else
+	if [ ! -d zotero ]; then
+		git clone --recursive $URL zotero
+	fi
+	
+	cd zotero
 	REPO_DIR="`pwd`"
 	
 	if [ ! -f "$REPO_DIR/install.rdf" ]; then
-		echo "$REPO_DIR/install.rdf not found -- did you forget a git clone to 'zotero'?"
+		echo "$REPO_DIR/install.rdf not found"
 		exit 1
 	fi
 	
