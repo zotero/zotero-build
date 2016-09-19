@@ -20,6 +20,11 @@ if [ ! -f "$XPI" ]; then
 	exit 1
 fi
 
+if ! unzip -l zotero-build.xpi | grep --quiet META-INF; then
+	echo "XPI is not signed"
+	exit 1
+fi
+
 aws s3 cp --content-type application/x-xpinstall "$XPI" s3://${S3_PATH}$XPI_FILE
 if [ $? != 0 ]; then
 	echo "Error running aws s3"
