@@ -1,5 +1,0 @@
-#!/bin/bash -e
-rm -f $BUILD_DIR/*.xpi
-rm -f $BUILD_DIR/*.rdf
-./build_xpi --branch master --channel alpha --xpi-suffix 5.0-alpha --rdf-suffix 5.0-branch --xpi-dir dev
-./push_dev_xpi 5.0-alpha 5.0-branch
