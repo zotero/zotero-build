@@ -250,7 +250,8 @@ def main():
                     rev = 1
             else:
                 with open(lastrev_file, 'r') as f:
-                    rev = int(f.read()) + 1
+                    rev = f.read()
+                    rev = int(rev if rev else 0) + 1
         
         if args.channel == "release":
             rev_sub_str = ""
