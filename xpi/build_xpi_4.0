@@ -1,21 +1,17 @@
 #!/bin/bash -e
 if [ -z $1 ]; then
-	echo "Usage: build_xpi [branch='master'] [channel='release'] [xpisuffix='build'] [rdfsuffix=''] [xpidir=''] [buildsuffix='build']"
+	echo "Usage: build_xpi branch [channel='release'] [xpisuffix='build'] [rdfsuffix=''] [xpidir=''] [buildsuffix='build']"
 	echo
-	echo "Example: build_xpi 3.0 release 3.0.1"
+	echo "Example: build_xpi 4.0 release 4.0.1"
 	echo "    - Builds zotero-build.xpi and update-build.rdf in ./build"
 	echo "    - Points install.rdf to zotero.org/download/update.rdf"
-	echo "    - Points update-build.rdf to zotero.org/download/zotero-3.0.1.xpi"
+	echo "    - Points update-build.rdf to zotero.org/download/zotero-4.0.1.xpi"
 	echo
-	echo "Example: build_xpi 3.0 release 3.0b2 beta"
+	echo "Example: build_xpi 4.0 beta 4.0-beta"
 	echo "    - Builds zotero-build.xpi and update-build.rdf in ./build"
 	echo "    - Points install.rdf to zotero.org/download/update-beta.rdf"
-	echo "    - Points update-build.rdf to zotero.org/download/zotero-3.0b2.xpi"
+	echo "    - Points update-build.rdf to zotero.org/download/zotero-4.0b2.xpi"
 	echo
-	echo "Example: build_xpi master beta trunk trunk dev"
-	echo "    - Builds zotero-build.xpi and update-build.rdf in ./build"
-	echo "    - Points install.rdf to zotero.org/download/dev/update-trunk.rdf"
-	echo "    - Points update-build.rdf to zotero.org/download/dev/zotero-trunk.xpi"
 	exit
 fi
 
