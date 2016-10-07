@@ -214,7 +214,13 @@ cat resource/config.js | grep VERSION:
 echo
 
 cd ..
-SHA1=`shasum zotero$BUILDSUFFIX.xpi | cut -d' ' -f1`
+# Cygwin has sha1sum, macOS has shasum, Linux has both
+if [[ -n "`which sha1sum 2> /dev/null`" ]]; then
+		SHACMD="sha1sum"
+else
+		SHACMD="shasum"
+fi
+SHA1=`$SHACMD zotero$BUILDSUFFIX.xpi | cut -d' ' -f1`
 perl -pi -e "s/sha1:/sha1:$SHA1/g" update$BUILDSUFFIX.rdf
 
 echo
