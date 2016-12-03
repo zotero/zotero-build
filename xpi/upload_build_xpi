@@ -20,7 +20,7 @@ if [ ! -f "$XPI" ]; then
 	exit 1
 fi
 
-if ! unzip -l zotero-build.xpi | grep --quiet META-INF; then
+if ! unzip -l "$XPI" | grep --quiet META-INF; then
 	echo "XPI is not signed"
 	exit 1
 fi
