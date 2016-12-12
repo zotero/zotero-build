@@ -20,7 +20,7 @@ if [ -z "$1" ]; then
 		exit 1
 	fi
 	
-	$ROOT_DIR/jpm/bin/jpm sign --api-key $AMO_KEY --api-secret $AMO_SECRET --xpi "$XPI_FILE"
+	$ROOT_DIR/node_modules/.bin/jpm sign --api-key $AMO_KEY --api-secret $AMO_SECRET --xpi "$XPI_FILE"
 	
 	XPI_FILE_SIGNED="`ls *-fx.xpi`"
 else
