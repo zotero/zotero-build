@@ -108,7 +108,7 @@ if [ "$CHANNEL" = "release" ]; then
 elif [ "$CHANNEL" = "release" ]; then
 	perl -pi -e "s/\.SOURCE/-$CHANNEL.$HASH/g" $TEMPDIR/zotero/resource/config.js
 else
-	perl -pi -e "s/\.SOURCE/-$CHANNEL.r$REV+$HASH/g" $TEMPDIR/zotero/resource/config.js
+	perl -pi -e "s/\.SOURCE/-$CHANNEL.$REV+$HASH/g" $TEMPDIR/zotero/resource/config.js
 fi
 
 cd ..
@@ -186,8 +186,8 @@ elif [ "$CHANNEL" = "source" ]; then
 	perl -pi -e "s/\.SOURCE/.SOURCE.$HASH/g" install.rdf
 	perl -pi -e "s/\.SOURCE/.SOURCE.$HASH/g" update.rdf
 else
-	perl -pi -e "s/\.SOURCE/-$CHANNEL.r$REV+$HASH/g" install.rdf
-	perl -pi -e "s/\.SOURCE/-$CHANNEL.r$REV+$HASH/g" update.rdf
+	perl -pi -e "s/\.SOURCE/-$CHANNEL.$REV+$HASH/g" install.rdf
+	perl -pi -e "s/\.SOURCE/-$CHANNEL.$REV+$HASH/g" update.rdf
 fi
 
 if [ $XPIDIR ]; then

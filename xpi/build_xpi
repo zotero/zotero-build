@@ -39,7 +39,7 @@ Example: build_xpi -b master -c alpha -x 5.0-alpha -r 5.0-branch --xpi-dir dev
   - Points install.rdf to https://zotero.org/download/dev/update-5.0-branch.rdf''')
 
 parser.add_argument('-b', '--branch', default='master', help='Git branch or tag to build from')
-parser.add_argument('-c', '--channel', default='release', help='channel to add to dev build version number (e.g., "beta" for "5.0-beta.r3+a5f28ca8"), or "release" to skip')
+parser.add_argument('-c', '--channel', default='release', help='channel to add to dev build version number (e.g., "beta" for "5.0-beta.3+a5f28ca8"), or "release" to skip')
 parser.add_argument('--build-suffix', metavar='SUFFIX', default='build', help='suffix of output XPI')
 parser.add_argument('--xpi-suffix', '-x', metavar='SUFFIX', default='', help='suffix of XPI to reference in update.rdf')
 parser.add_argument('--rdf-suffix', '-r', metavar='SUFFIX', default='', help='suffix of update.rdf file to reference in install.rdf (e.g., "beta" for "update-beta.rdf")')
@@ -222,7 +222,7 @@ def main():
         elif args.channel == "source":
             rev_sub_str = ".SOURCE.{0}".format(commit_hash)
         else:
-            rev_sub_str = "-{0}.r{1}+{2}".format(args.channel, str(rev), commit_hash)
+            rev_sub_str = "-{0}.{1}+{2}".format(args.channel, str(rev), commit_hash)
         if args.xpi_dir:
             xpi_dir = args.xpi_dir + '/'
         else:
