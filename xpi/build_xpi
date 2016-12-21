@@ -20,19 +20,19 @@ parser = argparse.ArgumentParser(
     description='Build a Zotero XPI',
     formatter_class=CustomFormatter,
     epilog='''
-Example: build_xpi -b 5.0 -x 5.0.1
+Example: build_xpi -b 5.0 -x 5.0.1 -z
   - Builds from the 5.0 branch
   - Builds zotero-build.xpi and update-build.rdf
   - Points update-build.rdf to https://download.zotero.org/extension/zotero-5.0.1.xpi
   - Points install.rdf to https://www.zotero.org/download/update.rdf
 
-Example: build_xpi -b 5.0 -x 5.0b2 -r beta
+Example: build_xpi -b 5.0 -x 5.0b2 -r beta -z
   - Builds from the 5.0 branch
   - Builds zotero-build.xpi and update-build.rdf
   - Points update-build.rdf to https://download.zotero.org/extension/zotero-5.0b2.xpi
   - Points install.rdf to https://www.zotero.org/download/update-beta.rdf
 
-Example: build_xpi -b master -c alpha -x 5.0-alpha -r 5.0-branch --xpi-dir dev
+Example: build_xpi -b master -c alpha -x 5.0-alpha -r 5.0-branch --xpi-dir dev -z
   - Builds from the master branch
   - Builds zotero-build.xpi and update-build.rdf
   - Points update-build.rdf to https://download.zotero.org/extension/dev/zotero-5.0-alpha.xpi
@@ -46,6 +46,7 @@ parser.add_argument('--rdf-suffix', '-r', metavar='SUFFIX', default='', help='su
 parser.add_argument('--xpi-dir', metavar='DIR', default='', help='extra directory to point to when referencing the XPI in update.rdf')
 parser.add_argument('--repo-url', metavar='URL', default='https://github.com/zotero/zotero', help='Git URL to pull from')
 parser.add_argument('--source-dir', '-s', metavar='DIR', help='Directory to build from (overrides --repo-url and --branch)')
+parser.add_argument('--zip', '-z', action='store_true', help="Create XPI instead of leaving files in build/staging")
 
 args = parser.parse_args()
 
@@ -111,6 +112,27 @@ def main():
         commit_hash = subprocess.check_output([
             'git', 'rev-parse', '--short', 'HEAD'
         ]).decode(encoding="utf-8").strip()
+        
+        # Determine build targets
+        target_xpi_file = os.path.join(
+            build_dir, 'zotero' + args.build_suffix + '.xpi'
+        )
+        target_update_file = os.path.join(
+            build_dir, 'update' + args.build_suffix + '.rdf'
+        )
+        staging_dir = os.path.join(build_dir, 'staging')
+        
+        # Delete any existing build targets
+        try:
+            os.remove(target_xpi_file)
+        except OSError:
+            pass
+        try:
+            os.remove(target_update_file)
+        except OSError:
+            pass
+        if os.path.exists(staging_dir):
+            shutil.rmtree(staging_dir)
         
         # Remove tmp build directory if it already exists
         if os.path.exists(tmp_dir):
@@ -198,9 +220,10 @@ def main():
         log_line()
         log('Original install.rdf:')
         dump_file(install_file)
-        log('Original update.rdf:\n')
-        dump_file(update_file)
-        log_line()
+        if args.zip:
+            log('Original update.rdf:\n')
+            dump_file(update_file)
+            log_line()
         
         # Modify install.rdf and update.rdf as necessary
         
@@ -243,35 +266,48 @@ def main():
             )
             print(line, file=sys.stdout, end='')
         
-        # Move update.rdf out of code root
-        shutil.move(update_file, tmp_dir)
-        tmp_update_file = os.path.join(tmp_dir, 'update.rdf')
-        
-        # Create XPI
-        os.chdir(tmp_src_dir)
-        tmp_xpi_file = os.path.join(tmp_dir, 'zotero' + args.build_suffix + '.xpi')
-        subprocess.check_call(['zip', '-r', tmp_xpi_file, '.'])
-        
-        # Add SHA1 of XPI to update.rdf
-        sha1 = sha1file(tmp_xpi_file)
-        for line in fileinput.FileInput(tmp_update_file, inplace=1):
-            line = line.replace("sha1:", "sha1:" + sha1)
-            print(line, file=sys.stdout, end='')
-        
         log_line()
         log('Modified install.rdf:\n')
         dump_file(install_file)
-        log('Modified update.rdf:\n')
-        dump_file(tmp_update_file)
-        log_line()
         
-        # Move files to build directory
-        os.rename(tmp_xpi_file, os.path.join(build_dir, 'zotero' + args.build_suffix + '.xpi'))
-        os.rename(tmp_update_file, os.path.join(build_dir, 'update' + args.build_suffix + '.rdf'))
-        
-        log("")
-        log("zotero{0}.xpi and update{0}.rdf saved to {1}".format(args.build_suffix, build_dir))
-        log("")
+        # Create XPI
+        if args.zip:
+            # Move update.rdf out of code root
+            shutil.move(update_file, tmp_dir)
+            tmp_update_file = os.path.join(tmp_dir, 'update.rdf')
+            
+            os.chdir(tmp_src_dir)
+            tmp_xpi_file = os.path.join(tmp_dir, 'zotero' + args.build_suffix + '.xpi')
+            subprocess.check_call(['zip', '-r', tmp_xpi_file, '.'])
+            
+            # Add SHA1 of XPI to update.rdf
+            sha1 = sha1file(tmp_xpi_file)
+            for line in fileinput.FileInput(tmp_update_file, inplace=1):
+                line = line.replace("sha1:", "sha1:" + sha1)
+                print(line, file=sys.stdout, end='')
+            
+            log('Modified update.rdf:\n')
+            dump_file(tmp_update_file)
+            log_line()
+            
+            # Move files to build directory
+            os.rename(tmp_xpi_file, target_xpi_file)
+            os.rename(tmp_update_file, target_update_file)
+            
+            log("")
+            log("zotero{0}.xpi and update{0}.rdf saved to {1}".format(args.build_suffix, build_dir))
+            log("")
+        # Leave unzipped in staging directory
+        else:
+            # Don't create update.rdf
+            os.remove(update_file)
+            
+            # Move source files to staging
+            shutil.move(tmp_src_dir, staging_dir)
+            
+            log("")
+            log("Build files saved to {0}".format(staging_dir))
+            log("")
         
         # Update lastrev file with new revision number
         if args.channel not in ["release", "source"]:
