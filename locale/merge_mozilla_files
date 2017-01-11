@@ -68,14 +68,21 @@ def main():
         ["zh-TW", "https://addons.mozilla.org/firefox/downloads/latest/traditional-chinese-zh-tw-l/addon-417258-latest.xpi"]
     ]
     
-    entries = {
+    # Can be a string or a dict containing 'file' and 'patterns'
+    entries = [
         "chrome/{0}/locale/{0}/global/dateFormat.properties",
-        "chrome/{0}/locale/{0}/global/editMenuOverlay.dtd"
-    }
+        "chrome/{0}/locale/{0}/global/editMenuOverlay.dtd",
+        {
+            "file": "browser/chrome/{0}/locale/browser/browser.dtd",
+            "grep_patterns": [
+                "preferencesCmd"
+            ]
+        }
+    ]
     
     extracted_files = {}
     for entry in entries:
-        entry_filename = entry.split("/")[-1]
+        entry_filename = get_entry_filename(entry)
         if entry_filename != 'dateFormat.properties':
             extracted_files[entry_filename] = set()
     
@@ -99,16 +106,16 @@ def main():
             os.mkdir(locale_dir)
             
         file_name = url.split("/")[-1]
-        out_file = os.path.join(pack_dir, file_name)
+        pack_file = os.path.join(pack_dir, file_name)
         
         if not first:
             print()
         first = False
-        if use_cache and os.path.isfile(out_file):
-            print("Using cached file for " + out_file)
+        if use_cache and os.path.isfile(pack_file):
+            print("Using cached file for " + pack_file)
         else:
             print("Downloading " + url)
-            with urllib.request.urlopen(url) as response, open(out_file, 'wb') as f:
+            with urllib.request.urlopen(url) as response, open(pack_file, 'wb') as f:
                 code = response.getcode()
                 if code != 200:
                     sys.sterr.write("Got {0} for {1}\n".format(code, url))
@@ -117,32 +124,65 @@ def main():
                 shutil.copyfileobj(response, f)
         
         # Unzip selected files straight to target locale dirs
-        with zipfile.ZipFile(out_file, "r") as zip_ref:
+        with zipfile.ZipFile(pack_file, "r") as zip_ref:
             for entry in entries:
-                entry_filename = entry.split("/")[-1]
+                entry_path = get_entry_path(entry)
+                entry_filename = get_entry_filename(entry)
+                formatted_path = entry_path.format(lang)
                 
-                with zip_ref.open(entry.format(lang)) as source:
+                try:
+                    zip_ref.getinfo(formatted_path)
+                except KeyError:
+                    print("'{0}' not found in {1}".format(formatted_path, pack_file))
+                    continue
+                
+                with zip_ref.open(formatted_path) as source:
                     # Add date formats to JSON object
                     if entry_filename == 'dateFormat.properties':
                         date_formats[locale] = {
                             "short": [],
                             "long": []
                         }
-                        pattern = re.compile(r"^month\.\d+\.(Mmm|name)\s*=\s*([^\s]+)\s*$")
+                        pattern = re.compile(r"^month\.\d+\.(Mmm|name)\s*=\s*(.+)$")
                         for line in source:
                             matches = pattern.match(str(line, 'utf-8'))
                             if matches:
                                 if matches.group(1) == "Mmm":
-                                    date_formats[locale]["short"].append(matches.group(2))
+                                    date_formats[locale]["short"].append(
+                                        matches.group(2).strip()
+                                    )
                                 else:
-                                    date_formats[locale]["long"].append(matches.group(2))
+                                    date_formats[locale]["long"].append(
+                                        matches.group(2).strip()
+                                    )
                     # Extract other files
                     else:
                         target_path = os.path.join(locale_dir, entry_filename)
+                        print("Extracting " + target_path)
                         with open(target_path, "wb") as target:
-                            print("Extracting " + target_path)
-                            shutil.copyfileobj(source, target)
-                            extracted_files[entry_filename].add(locale)
+                            copied = False
+                            if isinstance(entry, dict) and entry['grep_patterns']:
+                                lines_to_write = []
+                                for line in source:
+                                    line_str = str(line, 'utf-8')
+                                    for p in entry['grep_patterns']:
+                                        if p in line_str:
+                                            lines_to_write.append(line)
+                                            continue
+                                
+                                if len(lines_to_write):
+                                    target.write(
+                                        # BOM is required for Firefox to read file
+                                        '\ufeff'.encode('utf-8')
+                                        + b''.join(lines_to_write)
+                                    )
+                                    copied = True
+                            else:
+                                shutil.copyfileobj(source, target)
+                                copied = True
+                            
+                            if copied:
+                                extracted_files[entry_filename].add(locale)
     
     print()
     
@@ -168,6 +208,20 @@ def main():
     print("Writing " + date_formats_path);
     with open(date_formats_path, 'w') as f:
         f.write(json.dumps(date_formats, indent='\t', ensure_ascii=False))
+
+
+def get_entry_path(entry):
+    if isinstance(entry, str):
+        path = entry
+    else:
+        path = entry['file']
+    return path
+
+
+def get_entry_filename(entry):
+    path = get_entry_path(entry)
+    return path.split("/")[-1]
+
 
 if __name__ == '__main__':
     sys.exit(main())
