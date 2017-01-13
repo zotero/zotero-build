@@ -93,7 +93,7 @@ def main():
                 ])
             
             # Check out Zotero code
-            subprocess.check_call(['git', 'fetch', 'origin', args.branch])
+            subprocess.check_call(['git', 'fetch', 'origin'])
             subprocess.check_call(['git', 'checkout', args.branch])
             subprocess.check_call('git submodule update --init', shell=True)
             # Uncomment to ignore fixed submodule versions and always pull latest versions
