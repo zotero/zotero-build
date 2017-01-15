@@ -92,9 +92,19 @@ def main():
                     'git', 'clone', '--recursive', args.repo_url, '.'
                 ])
             
-            # Check out Zotero code
             subprocess.check_call(['git', 'fetch', 'origin'])
-            subprocess.check_call(['git', 'checkout', args.branch])
+            # Determine if 'branch' is a reference or a commit
+            code = subprocess.call(['git', 'show-ref', '--verify', '-q',
+                                    'refs/heads/{0}'.format(args.branch)])
+            # If a reference, use git checkout origin/{branch} instead of just
+            # the commit in order to get a detached HEAD with the latest
+            # fetched changes. (There's probably a better way to do this.)
+            if code == 0:
+                checkout = 'origin/' + args.branch
+            else:
+                checkout = args.branch
+            subprocess.check_call(['git', 'checkout', checkout])
+            
             subprocess.check_call('git submodule update --init', shell=True)
             # Uncomment to ignore fixed submodule versions and always pull latest versions
             #subprocess.check_call('git submodule foreach git pull origin master', shell=True)
