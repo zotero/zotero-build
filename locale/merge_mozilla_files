@@ -203,6 +203,12 @@ def main():
     
     print()
     
+    # Date format overrides
+    # https://github.com/zotero/zotero/pull/1156
+    date_formats['fr-FR']['short'][5] = 'juin'
+    date_formats['fr-FR']['short'][6] = 'juil'
+    date_formats['fr-FR']['short'][11] = 'déc'
+    
     # Write dateFormats.json from the extracted data
     date_formats_path = os.path.join(schema_dir, 'dateFormats.json')
     print("Writing " + date_formats_path);
