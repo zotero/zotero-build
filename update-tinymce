@@ -1,0 +1,57 @@
+#!/bin/bash
+set -eu
+
+DIR="${1:-}/resource/tinymce"
+URL="${2:-}"
+
+if [[ -z "$DIR" ]] || [[ -z "$URL" ]]; then
+	echo "Usage: $0 /path/to/client zip-url" >&2
+	exit 1
+fi
+
+if [ ! -d "$DIR" ]; then
+	echo "$DIR is not a directory" >&2
+	exit 1
+fi
+
+rm -rf "$DIR/tmp"
+mkdir "$DIR/tmp"
+cd "$DIR/tmp"
+wget $URL
+unzip -q *.zip
+rm -rf *.zip
+cd tinymce/js/tinymce
+
+# Main file
+mv tinymce.js "$DIR/tinymce.js"
+
+# Plugins
+for p in autolink code contextmenu directionality link lists paste searchreplace; do
+	mv plugins/$p/plugin.js "$DIR/plugins/$p/"
+done
+
+# Patch link plugin
+rpl 'function openDetachedWindow(url) {' 'function openDetachedWindow(url) { /* Added by Zotero */ editor.execCommand("ZoteroLinkClick", false, url); return;'  "$DIR/plugins/link/plugin.js"
+
+# Skin/theme
+for i in content.min.css skin.min.css; do
+	mv skins/lightgray/$i "$DIR/skins/lightgray/"
+done
+for i in anchor.gif loader.gif object.gif trans.gif; do
+	mv skins/lightgray/img/$i "$DIR/skins/lightgray/img/"
+done
+for i in tinymce-small.woff tinymce.woff; do
+	mv skins/lightgray/fonts/$i "$DIR/skins/lightgray/fonts/"
+done
+for i in theme.js; do
+	cp themes/modern/$i "$DIR/themes/modern/"
+done
+
+cd "$DIR"
+rm -rf tmp
+
+git add $DIR
+git -C $DIR/../../ status
+git -C $DIR diff --cached
+
+echo Done
