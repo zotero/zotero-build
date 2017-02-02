@@ -197,7 +197,7 @@ def main():
             # Parse out the JSON metadata block
             m = re.match('^\s*{[\S\s]*?}\s*?[\r\n]', contents)
             if not m:
-                raise Exception("Metadata block not found in " + f)
+                raise Exception("Metadata block not found in " + f.name)
             metadata = json.loads(m.group(0))
             index[metadata["translatorID"]] = {
                 "fileName": fn,
