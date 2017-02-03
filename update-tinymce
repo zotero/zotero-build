@@ -26,12 +26,14 @@ cd tinymce/js/tinymce
 mv tinymce.js "$DIR/tinymce.js"
 
 # Plugins
-for p in autolink code contextmenu directionality link lists paste searchreplace; do
+for p in autolink code contextmenu directionality link lists paste searchreplace textcolor; do
+	mkdir -p "$DIR/plugins/$p/"
 	mv plugins/$p/plugin.js "$DIR/plugins/$p/"
 done
 
 # Patch link plugin
-rpl 'function openDetachedWindow(url) {' 'function openDetachedWindow(url) { /* Added by Zotero */ editor.execCommand("ZoteroLinkClick", false, url); return;'  "$DIR/plugins/link/plugin.js"
+rpl 'function openDetachedWindow(url) {' 'function openDetachedWindow(url) { /* Added by Zotero */ editor.execCommand("ZoteroLinkClick", false, url); } /*'  "$DIR/plugins/link/plugin.js"
+rpl 'function gotoLink(a) {' '*/function gotoLink(a) {'  "$DIR/plugins/link/plugin.js"
 
 # Skin/theme
 for i in content.min.css skin.min.css; do
