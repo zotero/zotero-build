@@ -177,7 +177,10 @@ def main():
         ])
         
         # Delete test files
-        shutil.rmtree(os.path.join(tmp_src_dir, 'test'))
+        # TEMP: This won't need to be conditional once client build process is updated
+        test_dir = os.path.join(tmp_src_dir, 'test')
+        if os.path.exists(test_dir):
+            shutil.rmtree(test_dir)
         
         # Delete styles build script
         os.remove(os.path.join(tmp_src_dir, 'styles', 'update'))
