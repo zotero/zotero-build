@@ -108,6 +108,14 @@ def main():
             subprocess.check_call('git submodule update --init', shell=True)
             # Uncomment to ignore fixed submodule versions and always pull latest versions
             #subprocess.check_call('git submodule foreach git pull origin master', shell=True)
+            
+            # Update node_modules and run gulp build
+            subprocess.check_call(['npm', 'i'])
+            subprocess.check_call('npm run clean && node_modules/.bin/gulp build', shell=True)
+            
+            # Switch to build/
+            src_dir = os.path.join(src_dir, 'build')
+            os.chdir(src_dir)
         
         if not os.path.exists('install.rdf'):
             raise FileNotFoundError("install.rdf not found in {0}".format(src_dir))
