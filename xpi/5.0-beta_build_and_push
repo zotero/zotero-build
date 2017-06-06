@@ -1,8 +1,0 @@
-#!/bin/bash -e
-. config.sh
-
-rm -f "$BUILD_DIR"/*.xpi
-rm -f "$BUILD_DIR"/*.rdf
-./build_xpi --branch master --channel beta --xpi-suffix 5.0-beta --rdf-suffix 5.0-branch --xpi-dir dev -z
-./sign_xpi
-./push_dev_xpi 5.0-beta 5.0-branch
