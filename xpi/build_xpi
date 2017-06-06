@@ -20,32 +20,28 @@ parser = argparse.ArgumentParser(
     description='Build a Zotero XPI',
     formatter_class=CustomFormatter,
     epilog='''
-Example: build_xpi -b 5.0 -x 5.0.1 -z
-  - Builds from the 5.0 branch
+Example: build_xpi -s ~/zotero-client/build -x 5.0.1 -z
   - Builds zotero-build.xpi and update-build.rdf
   - Points update-build.rdf to https://download.zotero.org/extension/zotero-5.0.1.xpi
   - Points install.rdf to https://www.zotero.org/download/update.rdf
 
-Example: build_xpi -b 5.0 -x 5.0b2 -r beta -z
-  - Builds from the 5.0 branch
+Example: build_xpi -s ~/zotero-client/build -c beta -m 7c27a9bb5 -x 5.0b2 -r beta -z
   - Builds zotero-build.xpi and update-build.rdf
   - Points update-build.rdf to https://download.zotero.org/extension/zotero-5.0b2.xpi
   - Points install.rdf to https://www.zotero.org/download/update-beta.rdf
 
-Example: build_xpi -b master -c alpha -x 5.0-alpha -r 5.0-branch --xpi-dir dev -z
-  - Builds from the master branch
+Example: build_xpi -s ~/zotero-client/build -c alpha -m 7c27a9bb5 -x 5.0-alpha -r 5.0-branch --xpi-dir dev -z
   - Builds zotero-build.xpi and update-build.rdf
   - Points update-build.rdf to https://download.zotero.org/extension/dev/zotero-5.0-alpha.xpi
   - Points install.rdf to https://zotero.org/download/dev/update-5.0-branch.rdf''')
 
-parser.add_argument('-b', '--branch', default='master', help='Git branch or tag to build from')
+parser.add_argument('--source-dir', '-s', required=True, metavar='DIR', help='Directory to build from')
 parser.add_argument('-c', '--channel', default='source', help='channel to add to dev build version number (e.g., "beta" for "5.0-beta.3+a5f28ca8"), or "release" or "source" to skip')
+parser.add_argument('--commit-hash', '-m', metavar='HASH', help='Commit hash (required for non-release builds)')
 parser.add_argument('--build-suffix', metavar='SUFFIX', default='build', help='suffix of output XPI')
 parser.add_argument('--xpi-suffix', '-x', metavar='SUFFIX', default='', help='suffix of XPI to reference in update.rdf')
 parser.add_argument('--rdf-suffix', '-r', metavar='SUFFIX', default='', help='suffix of update.rdf file to reference in install.rdf (e.g., "beta" for "update-beta.rdf")')
 parser.add_argument('--xpi-dir', metavar='DIR', default='', help='extra directory to point to when referencing the XPI in update.rdf')
-parser.add_argument('--repo-url', metavar='URL', default='https://github.com/zotero/zotero', help='Git URL to pull from')
-parser.add_argument('--source-dir', '-s', metavar='DIR', help='Directory to build from (overrides --repo-url and --branch)')
 parser.add_argument('--zip', '-z', action='store_true', help="Create XPI instead of leaving files in build/staging")
 
 args = parser.parse_args()
@@ -61,7 +57,7 @@ def main():
         
         root_dir = os.path.dirname(os.path.realpath(__file__))
         
-        # Use BUILD_DIR environmental variable if present
+        # Use BUILD_DIR environmental variable if present, and otherwise ./build
         build_dir = os.environ.get('BUILD_DIR', os.path.join(root_dir, 'build'))
         tmp_dir = os.path.join(build_dir, 'tmp')
         
@@ -69,53 +65,16 @@ def main():
             raise Exception(build_dir + " is not a directory")
         
         src_dir = args.source_dir
-        if src_dir:
-            if not os.path.isdir(src_dir):
-                raise Exception(src_dir + " is not a directory")
-            
-            log("Using existing source directory of " + src_dir)
-            os.chdir(src_dir)
-        # Create 'zotero' directory inside build directory if necessary
-        # TEMP: For now, use 'zotero-5.0' to keep separate from 4.0 checkout
-        else:
-            src_dir = os.path.join(build_dir, 'zotero')
-            if not os.path.isdir(src_dir):
-                log(src_dir + " does not exist -- creating")
-                os.mkdir(src_dir)
-            
-            os.chdir(src_dir)
-            
-            # If 'zotero' directory doesn't contain Zotero code, clone the repo into it
-            if not os.path.exists(os.path.join(src_dir, '.git')):
-                log("Cloning Zotero into " + src_dir)
-                subprocess.check_call([
-                    'git', 'clone', '--recursive', args.repo_url, '.'
-                ])
-            
-            subprocess.check_call(['git', 'fetch', 'origin'])
-            # Determine if 'branch' is a reference or a commit
-            code = subprocess.call(['git', 'show-ref', '--verify', '-q',
-                                    'refs/heads/{0}'.format(args.branch)])
-            # If a reference, use git checkout origin/{branch} instead of just
-            # the commit in order to get a detached HEAD with the latest
-            # fetched changes. (There's probably a better way to do this.)
-            if code == 0:
-                checkout = 'origin/' + args.branch
-            else:
-                checkout = args.branch
-            subprocess.check_call(['git', 'checkout', checkout])
-            
-            subprocess.check_call('git submodule update --init', shell=True)
-            # Uncomment to ignore fixed submodule versions and always pull latest versions
-            #subprocess.check_call('git submodule foreach git pull origin master', shell=True)
-            
-            # Update node_modules and run gulp build
-            subprocess.check_call(['npm', 'i'])
-            subprocess.check_call('npm run clean && node_modules/.bin/gulp build', shell=True)
-            
-            # Switch to build/
-            src_dir = os.path.join(src_dir, 'build')
-            os.chdir(src_dir)
+        if not os.path.isdir(src_dir):
+            raise Exception(src_dir + " is not a directory")
+        
+        if args.commit_hash:
+            commit_hash = args.commit_hash[0:9]
+        elif args.channel != "release":
+            raise Exception("--commit-hash must be specified for non-release builds")
+        
+        log("Using source directory of " + src_dir)
+        os.chdir(src_dir)
         
         if not os.path.exists('install.rdf'):
             raise FileNotFoundError("install.rdf not found in {0}".format(src_dir))
@@ -127,9 +86,6 @@ def main():
         if not m:
             raise Exception("Version number not found in install.rdf")
         version = m.group(1)
-        commit_hash = subprocess.check_output([
-            'git', 'rev-parse', '--short', 'HEAD'
-        ]).decode(encoding="utf-8").strip()
         
         # Determine build targets
         target_xpi_file = os.path.join(
