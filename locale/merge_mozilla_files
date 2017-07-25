@@ -76,7 +76,8 @@ def main():
             "file": "chrome/{0}/locale/{0}/global/intl.properties",
             "grep_patterns": [
                 "^general.useragent.locale",
-                "^pluralRule"
+                "^pluralRule",
+                "^intl.accept_languages"
             ]
         },
         {
