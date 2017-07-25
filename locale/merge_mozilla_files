@@ -210,6 +210,7 @@ def main():
     # Copy en-US files to any locales that didn't have localized versions
     en_locale_dir = os.path.join(locales_dir, 'en-US', 'zotero', 'mozilla')
     locales = set(os.listdir(locales_dir))
+    locales -= set(['.DS_Store'])
     for entry_filename, existing_locales in extracted_files.items():
         missing = locales.difference(existing_locales)
         
