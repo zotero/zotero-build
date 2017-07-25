@@ -73,6 +73,13 @@ def main():
         "chrome/{0}/locale/{0}/global/dateFormat.properties",
         "chrome/{0}/locale/{0}/global/editMenuOverlay.dtd",
         {
+            "file": "chrome/{0}/locale/{0}/global/intl.properties",
+            "grep_patterns": [
+                "^general.useragent.locale",
+                "^pluralRule"
+            ]
+        },
+        {
             "file": "browser/chrome/{0}/locale/browser/browser.dtd",
             "grep_patterns": [
                 "preferencesCmd"
@@ -161,22 +168,36 @@ def main():
                         print("Extracting " + target_path)
                         with open(target_path, "wb") as target:
                             copied = False
+                            
+                            # Filter lines based on grep patterns
                             if isinstance(entry, dict) and entry['grep_patterns']:
                                 lines_to_write = []
                                 for line in source:
                                     line_str = str(line, 'utf-8')
                                     for p in entry['grep_patterns']:
-                                        if p in line_str:
+                                        if re.search(re.compile(p), line_str):
+                                            # Use our locale tag, not the bundled one
+                                            if 'general.useragent.locale' in p:
+                                                line = re.sub(
+                                                    r'=.+', '={0}'.format(locale),
+                                                    line_str
+                                                )
+                                                line = line.encode('utf-8')
+                                            
                                             lines_to_write.append(line)
                                             continue
                                 
                                 if len(lines_to_write):
+                                    # BOM is required for Firefox to read .dtd files
+                                    use_bom = entry_filename.endswith('.dtd')
+                                    
                                     target.write(
-                                        # BOM is required for Firefox to read file
-                                        '\ufeff'.encode('utf-8')
+                                        ('\ufeff'.encode('utf-8') if use_bom else b'')
                                         + b''.join(lines_to_write)
                                     )
                                     copied = True
+                            
+                            # Copy file directly
                             else:
                                 shutil.copyfileobj(source, target)
                                 copied = True
