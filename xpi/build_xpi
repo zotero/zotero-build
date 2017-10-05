@@ -120,6 +120,7 @@ def main():
             '-aL',
             # Exclude hidden files
             '--exclude', '.*',
+            '--exclude', '#*',
             '.' + os.sep,
             tmp_src_dir + os.sep
         ])
