@@ -158,7 +158,7 @@ def main():
         # Build translator index
         index = OrderedDict()
         for fn in sorted((fn for fn in os.listdir(translators_dir)), key=str.lower):
-            with open(os.path.join(translators_dir, fn), 'r') as f:
+            with open(os.path.join(translators_dir, fn), 'r', encoding='utf-8') as f:
                 contents = f.read()
             # Parse out the JSON metadata block
             m = re.match('^\s*{[\S\s]*?}\s*?[\r\n]', contents)
@@ -187,7 +187,7 @@ def main():
         os.remove('fw.js')
         
         # Write translator index as JSON file
-        with open(os.path.join(tmp_src_dir, 'translators.json'), 'w') as f:
+        with open(os.path.join(tmp_src_dir, 'translators.json'), 'w', encoding='utf-8') as f:
             json.dump(index, f, indent=True, ensure_ascii=False)
         
         install_file = os.path.join(tmp_src_dir, 'install.rdf')
