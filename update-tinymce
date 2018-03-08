@@ -27,7 +27,8 @@ mv tinymce.min.js "$DIR/tinymce.min.js"
 
 # Plugins
 rm -rf "$DIR/plugins"
-for p in autolink code contextmenu directionality link lists paste searchreplace textcolor; do
+# TEMP: Paste plugin handled below
+for p in autolink code contextmenu directionality link lists searchreplace textcolor; do
 	mkdir -p "$DIR/plugins/$p/"
 	mv plugins/$p/plugin.min.js "$DIR/plugins/$p/"
 done
@@ -83,6 +84,20 @@ for i in theme.min.js; do
 done
 
 cd "$DIR"
+
+# TEMP: Get 'paste' plugin from 4.6.7 to fix
+# https://forums.zotero.org/discussion/70720/after-copy-by-dragging-the-cursor-disappears
+cd tmp
+wget -O tinymce-paste.zip http://download.ephox.com/tinymce/community/tinymce_4.6.7.zip
+sha=`shasum -a 256 tinymce-paste.zip | cut -d' ' -f1`
+if [ $sha != 'aae9320ba1f8c03a332cd8649489c6a77aa737ae934d14b21b55365797c268a6' ]; then
+	echo "Hash doesn't match for tinymce_4.6.7.zip!" >&2
+	exit 1
+fi
+mkdir -p "$DIR/plugins/paste/"
+unzip -j tinymce-paste.zip tinymce/js/tinymce/plugins/paste/plugin.min.js -d "$DIR/plugins/paste/"
+rm tinymce-paste.zip
+
 rm -rf tmp
 
 git add $DIR
