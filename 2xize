@@ -6,7 +6,7 @@ import re
 
 def append2x(content, dir):
     header = """/* BEGIN 2X BLOCK -- DO NOT EDIT MANUALLY -- USE 2XIZE */
-@media (min-resolution: 1.5dppx) {\n"""
+@media (min-resolution: 1.25dppx) {\n"""
     footer = "\n}\n"
     output = ""
     for line in content.split("\n"):
