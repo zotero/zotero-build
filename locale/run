@@ -12,11 +12,13 @@ WORKDIR=$BASEDIR/work
 DIR="$1"
 
 cd $WORKDIR
+# Create temporary directories for merge script
 rm -rf en-US-new locales content-locales output
 mkdir en-US-new locales content-locales output
 cp -R $DIR/en-US/zotero/* en-US-new
 cp -R $DIR/ locales/
 rm -rf locales/en-US
+# Correct various errors
 find locales -name '*.dtd' -exec perl -pi -e "s/&amp;([^\s])/&\$1/g" {} \;
 find locales -name '*.properties' -exec rpl 'S%' '%S' {} \;
 find locales -name '*.properties' -exec rpl '/n' '\n' {} \;
@@ -24,9 +26,12 @@ find locales -name '*.properties' -exec rpl '\\' '\' {} \;
 find locales -name '*.properties' -exec rpl '\n\n\(?!n)' '\n\n' {} \;
 find locales -name '*.properties' -exec rpl '\\' '\' {} \;
 
+# Run merge script
 $BASEDIR/localizer
 rsync -a --progress --verbose $WORKDIR/output/locale/ $DIR/
 
 rpl -R ⏎ '\n' "$DIR"
 
 rm -rf en-US-new locales content-locales output
+
+$BASEDIR/filter_connector_json "$DIR"
