@@ -28,7 +28,7 @@ mv tinymce.min.js "$DIR/tinymce.min.js"
 # Plugins
 rm -rf "$DIR/plugins"
 # TEMP: Paste plugin handled below
-for p in autolink code contextmenu directionality link lists searchreplace textcolor; do
+for p in autolink code contextmenu directionality link lists nonbreaking searchreplace textcolor; do
 	mkdir -p "$DIR/plugins/$p/"
 	mv plugins/$p/plugin.min.js "$DIR/plugins/$p/"
 done
@@ -38,11 +38,11 @@ if ! grep --quiet 'o=t.\$' "$DIR/plugins/link/plugin.min.js"; then
 	echo "Couldn't find 't' for editor in link plugin" >&2
 	exit 1
 fi
-if ! grep --quiet 'b(e.href)' "$DIR/plugins/link/plugin.min.js"; then
-	echo "Couldn't find 'b(e.href)' in link plugin" >&2
+if ! grep --quiet 'c(e.href)' "$DIR/plugins/link/plugin.min.js"; then
+	echo "Couldn't find 'c(e.href)' in link plugin" >&2
 	exit 1
 fi
-perl -pi -e 's/b\(e\.href\)/t.execCommand("ZoteroLinkClick", false, e.href)/' "$DIR/plugins/link/plugin.min.js"
+perl -pi -e 's/c\(e\.href\)/t.execCommand("ZoteroLinkClick", false, e.href)/' "$DIR/plugins/link/plugin.min.js"
 
 # Skin
 rm -rf "$DIR/skins"
