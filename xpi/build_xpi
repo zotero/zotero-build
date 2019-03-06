@@ -121,6 +121,8 @@ def main():
             # Exclude hidden files
             '--exclude', '.*',
             '--exclude', '#*',
+            '--exclude', 'package.json',
+            '--exclude', 'package-lock.json',
             '.' + os.sep,
             tmp_src_dir + os.sep
         ])
