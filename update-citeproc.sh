@@ -4,6 +4,13 @@ if [ -e "./config.sh" ]; then
 	. ./config.sh
 fi
 
+tag=master
+if [ -n "$1" ]; then
+	tag=$1
+fi
+echo Downloading tag $tag
+sleep 2
+
 outFile="$ZOTEROSRC/chrome/content/zotero/xpcom/citeproc.js"
 
 if [ ! -e "$outFile" ]; then
@@ -11,7 +18,7 @@ if [ ! -e "$outFile" ]; then
 	exit 78 # EX_CONFIG: configuration error (from sysexits.h)
 fi
 
-curl https://raw.githubusercontent.com/Juris-M/citeproc-js/master/citeproc.js > "$outFile"
+curl https://raw.githubusercontent.com/Juris-M/citeproc-js/$tag/citeproc.js > "$outFile"
 
 echo
 
