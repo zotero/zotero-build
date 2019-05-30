@@ -38,11 +38,16 @@ if ! grep --quiet 'o=t.\$' "$DIR/plugins/link/plugin.min.js"; then
 	echo "Couldn't find 't' for editor in link plugin" >&2
 	exit 1
 fi
-if ! grep --quiet 'c(e.href)' "$DIR/plugins/link/plugin.min.js"; then
-	echo "Couldn't find 'c(e.href)' in link plugin" >&2
+if ! grep --quiet 's(e.href)' "$DIR/plugins/link/plugin.min.js"; then
+	echo "Couldn't find 's(e.href)' in link plugin" >&2
 	exit 1
 fi
-perl -pi -e 's/c\(e\.href\)/t.execCommand("ZoteroLinkClick", false, e.href)/' "$DIR/plugins/link/plugin.min.js"
+if ! grep --quiet '/^\\w+:/' "$DIR/plugins/link/plugin.min.js"; then
+	echo "Couldn't find '/^\w+:/' in link plugin" >&2
+	exit 1
+fi
+perl -pi -e 's/s\(e\.href\)/t.execCommand("ZoteroLinkClick", false, e.href)/' "$DIR/plugins/link/plugin.min.js"
+perl -pi -e 's{\^\\w\+:}{^\w+:|^#}' "$DIR/plugins/link/plugin.min.js"
 
 # Skin
 rm -rf "$DIR/skins"
