@@ -47,7 +47,7 @@ if ! grep --quiet '/^\\w+:/' "$DIR/plugins/link/plugin.min.js"; then
 	exit 1
 fi
 perl -pi -e 's/s\(e\.href\)/t.execCommand("ZoteroLinkClick", false, e.href)/' "$DIR/plugins/link/plugin.min.js"
-perl -pi -e 's{\^\\w\+:}{^\w+:|^#}' "$DIR/plugins/link/plugin.min.js"
+perl -pi -e 's{\^\\w\+:}{^\\w+:|^#}' "$DIR/plugins/link/plugin.min.js"
 
 # Skin
 rm -rf "$DIR/skins"
