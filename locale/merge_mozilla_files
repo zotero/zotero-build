@@ -7,6 +7,7 @@ import urllib.request
 import shutil
 import zipfile
 import re
+import xml.etree.ElementTree as ET
 
 def main():
     use_cache = True
@@ -23,59 +24,59 @@ def main():
     
     # AMO download links for Firefox language packs
     language_packs = [
-        ["en-US", "https://addons.mozilla.org/firefox/downloads/latest/english-us-language-pack/addon-407142-latest.xpi"],
-        ["af", "https://addons.mozilla.org/firefox/downloads/latest/afrikaans-language-pack/addon-5180-latest.xpi", "af-ZA"],
-        ["ar", "https://addons.mozilla.org/firefox/downloads/latest/%D8%A7%D9%84%D8%B9%D8%B1%D8%A8%D9%8A%D8%A9-language-pack/addon-417448-latest.xpi"],
-        ["bg", "https://addons.mozilla.org/firefox/downloads/latest/%D0%B1%D1%8A%D0%BB%D0%B3%D0%B0%D1%80%D1%81%D0%BA%D0%B8-language-pack/addon-417154-latest.xpi", "bg-BG"],
-        ["ca", "https://addons.mozilla.org/firefox/downloads/latest/ca-language-pack/addon-5019-latest.xpi", "ca-AD"],
-        ["cs", "https://addons.mozilla.org/firefox/downloads/latest/czech-cz-language-pack/addon-417160-latest.xpi", "cs-CZ"],
-        ["da", "https://addons.mozilla.org/firefox/downloads/latest/dansk-da-language-pack/addon-376557-latest.xpi", "da-DK"],
-        ["de", "https://addons.mozilla.org/firefox/downloads/latest/deutsch-de-language-pack/addon-417164-latest.xpi"],
-        ["el", "https://addons.mozilla.org/firefox/downloads/latest/greek-gr-language-pack/addon-417166-latest.xpi", "el-GR"],
-        ["es-ES", "https://addons.mozilla.org/firefox/downloads/latest/espa%C3%B1ol-espa%C3%B1a-language-pac/addon-417172-latest.xpi"],
-        ["fr", "https://addons.mozilla.org/firefox/downloads/latest/fran%C3%A7ais-language-pack/addon-417178-latest.xpi", "fr-FR"],
-        ["et", "https://addons.mozilla.org/firefox/downloads/latest/eesti-et-keele-pakk/addon-7573-latest.xpi", "et-EE"],
-        ["eu", "https://addons.mozilla.org/firefox/downloads/latest/basque-language-pack/addon-417174-latest.xpi", "eu-ES"],
-        ["fa", "https://addons.mozilla.org/firefox/downloads/latest/persian-ir-%D9%81%D8%A7%D8%B1%D8%B3%DB%8C-%D8%A7%DB%8C%D8%B1%D8%A7%D9%86-lang/addon-417456-latest.xpi"],
-        ["fi", "https://addons.mozilla.org/firefox/downloads/latest/finnish-language-pack/addon-417176-latest.xpi", "fi-FI"],
-        ["he", "https://addons.mozilla.org/firefox/downloads/latest/hebrew-il-language-pack/addon-417186-latest.xpi", "he-IL"],
-        ["hr", "https://addons.mozilla.org/firefox/downloads/latest/hrvatski-hr-language-pack/addon-417190-latest.xpi", "hr-HR"],
-        ["hu", "https://addons.mozilla.org/firefox/downloads/latest/magyar-nyelvi/addon-13589-latest.xpi?src=dp-btn-primary", "hu-HU"],
-        ["id", "https://addons.mozilla.org/firefox/downloads/latest/indonesian-langpack/addon-6293-latest.xpi", "id-ID"],
-        ["is", "https://addons.mozilla.org/firefox/downloads/latest/icelandic-is-language-pack/addon-417192-latest.xpi", "is-IS"],
-        ["it", "https://addons.mozilla.org/firefox/downloads/latest/italiano-it-language-pack/addon-417194-latest.xpi", "it-IT"],
-        ["ja", "https://addons.mozilla.org/firefox/downloads/latest/japanese-language-pack-1/addon-417196-latest.xpi", "ja-JP"],
-        ["km", "https://addons.mozilla.org/firefox/downloads/latest/%E1%9E%81%E1%9E%98%E1%9E%9A-language-pack/addon-417200-latest.xpi"],
-        ["ko", "https://addons.mozilla.org/firefox/downloads/latest/korean-kr-language-pack/addon-417204-latest.xpi", "ko-KR"],
-        ["lt", "https://addons.mozilla.org/firefox/downloads/latest/lietuvi%C5%B3-language-pack/addon-417210-latest.xpi", "lt-LT"],
-        ["nb-NO", "https://addons.mozilla.org/firefox/downloads/latest/norsk-bokm%C3%A5l-no-language-pa/addon-417220-latest.xpi"],
-        ["nn-NO", "https://addons.mozilla.org/firefox/downloads/latest/norsk-nynorsk-no-language-p/addon-417224-latest.xpi"],
-        ["nl", "https://addons.mozilla.org/firefox/downloads/latest/nederlands-nl-language-pack/addon-417222-latest.xpi", "nl-NL"],
-        ["pl", "https://addons.mozilla.org/firefox/downloads/latest/polski-language-pack/addon-417230-latest.xpi", "pl-PL"],
-        ["pt-BR", "https://addons.mozilla.org/firefox/downloads/latest/firefox-br/addon-4851-latest.xpi"],
-        ["pt-PT", "https://addons.mozilla.org/firefox/downloads/latest/portugu%C3%AAs-portugal-language/addon-417232-latest.xpi"],
-        ["ro", "https://addons.mozilla.org/firefox/downloads/latest/romanian-language-pack/addon-4551-latest.xpi", "ro-RO"],
-        ["ru", "https://addons.mozilla.org/firefox/downloads/latest/russian-ru-language-pack/addon-417236-latest.xpi", "ru-RU"],
-        ["sk", "https://addons.mozilla.org/firefox/downloads/latest/slovak-sk-language-pack/addon-417238-latest.xpi", "sk-SK"],
-        ["sl", "https://addons.mozilla.org/firefox/downloads/latest/slovenski-jezik-language-pa/addon-417240-latest.xpi", "sl-SI"],
-        ["sr", "https://addons.mozilla.org/firefox/downloads/latest/%D1%81%D1%80%D0%BF%D1%81%D0%BA%D0%B8-sr-language-pack/addon-417246-latest.xpi", "sr-RS"],
-        ["sv-SE", "https://addons.mozilla.org/firefox/downloads/latest/svenska-se-language-pack/addon-417248-latest.xpi", "sv-SE"],
-        ["th", "https://addons.mozilla.org/firefox/downloads/latest/thai-language-pack/addon-417252-latest.xpi", "th-TH"],
-        ["tr", "https://addons.mozilla.org/firefox/downloads/latest/t%C3%BCrk%C3%A7e-tr-language-pack/addon-417254-latest.xpi", "tr-TR"],
-        ["uk", "https://addons.mozilla.org/firefox/downloads/latest/ukrainian-language-pack/addon-8141-latest.xpi", "uk-UA"],
-        ["vi", "https://addons.mozilla.org/firefox/downloads/latest/vietnamese-language-pack/addon-8228-latest.xpi", "vi-VN"],
-        ["zh-CN", "https://addons.mozilla.org/firefox/downloads/latest/chinese-simplified-zh-cn-la/addon-417256-latest.xpi"],
-        ["zh-TW", "https://addons.mozilla.org/firefox/downloads/latest/traditional-chinese-zh-tw-l/addon-417258-latest.xpi"]
+        ["en-US", "https://addons.mozilla.org/en-US/firefox/addon/english-us-language-pack/"],
+        ["af", "https://addons.mozilla.org/en-US/firefox/addon/afrikaans-language-pack/", "af-ZA"],
+        ["ar", "https://addons.mozilla.org/en-US/firefox/addon/%D8%A7%D9%84%D8%B9%D8%B1%D8%A8%D9%8A%D8%A9-language-pack/"],
+        ["bg", "https://addons.mozilla.org/en-US/firefox/addon/%D0%B1%D1%8A%D0%BB%D0%B3%D0%B0%D1%80%D1%81%D0%BA%D0%B8-language-pack/", "bg-BG"],
+        ["ca", "https://addons.mozilla.org/en-US/firefox/addon/ca-language-pack/", "ca-AD"],
+        ["cs", "https://addons.mozilla.org/en-US/firefox/addon/czech-cz-language-pack/", "cs-CZ"],
+        ["da", "https://addons.mozilla.org/en-US/firefox/addon/dansk-da-language-pack/", "da-DK"],
+        ["de", "https://addons.mozilla.org/en-US/firefox/addon/deutsch-de-language-pack/"],
+        ["el", "https://addons.mozilla.org/en-US/firefox/addon/greek-gr-language-pack/", "el-GR"],
+        ["en-GB", "https://addons.mozilla.org/en-US/firefox/addon/english-gb-language-pack/"],
+        ["es-ES", "https://addons.mozilla.org/en-US/firefox/addon/espa%C3%B1ol-espa%C3%B1a-language-pac/"],
+        ["fr", "https://addons.mozilla.org/en-US/firefox/addon/fran%C3%A7ais-language-pack/", "fr-FR"],
+        ["et", "https://addons.mozilla.org/en-US/firefox/addon/eesti-et-keele-pakk/", "et-EE"],
+        ["eu", "https://addons.mozilla.org/en-US/firefox/addon/basque-language-pack/", "eu-ES"],
+        ["fa", "https://addons.mozilla.org/en-US/firefox/addon/persian-ir-%D9%81%D8%A7%D8%B1%D8%B3%DB%8C-%D8%A7%DB%8C%D8%B1%D8%A7%D9%86-lang/"],
+        ["fi", "https://addons.mozilla.org/en-US/firefox/addon/finnish-language-pack/", "fi-FI"],
+        ["he", "https://addons.mozilla.org/en-US/firefox/addon/hebrew-il-language-pack/", "he-IL"],
+        ["hr", "https://addons.mozilla.org/en-US/firefox/addon/hrvatski-hr-language-pack/", "hr-HR"],
+        ["hu", "https://addons.mozilla.org/en-US/firefox/addon/magyar-nyelvi/", "hu-HU"],
+        ["id", "https://addons.mozilla.org/en-US/firefox/addon/indonesian-langpack/", "id-ID"],
+        ["is", "https://addons.mozilla.org/en-US/firefox/addon/icelandic-is-language-pack/", "is-IS"],
+        ["it", "https://addons.mozilla.org/en-US/firefox/addon/italiano-it-language-pack/", "it-IT"],
+        ["ja", "https://addons.mozilla.org/en-US/firefox/addon/japanese-language-pack-1/", "ja-JP"],
+        ["km", "https://addons.mozilla.org/en-US/firefox/addon/%E1%9E%81%E1%9E%98%E1%9E%9A-language-pack/"],
+        ["ko", "https://addons.mozilla.org/en-US/firefox/addon/korean-kr-language-pack/", "ko-KR"],
+        ["lt", "https://addons.mozilla.org/en-US/firefox/addon/lietuvi%C5%B3-language-pack/", "lt-LT"],
+        ["nb-NO", "https://addons.mozilla.org/en-US/firefox/addon/norsk-bokm%C3%A5l-no-language-pa/"],
+        ["nn-NO", "https://addons.mozilla.org/en-US/firefox/addon/norsk-nynorsk-no-language-p/"],
+        ["nl", "https://addons.mozilla.org/en-US/firefox/addon/nederlands-nl-language-pack/", "nl-NL"],
+        ["pl", "https://addons.mozilla.org/en-US/firefox/addon/polski-language-pack/", "pl-PL"],
+        ["pt-BR", "https://addons.mozilla.org/en-US/firefox/addon/firefox-br/"],
+        ["pt-PT", "https://addons.mozilla.org/en-US/firefox/addon/portugu%C3%AAs-portugal-language/"],
+        ["ro", "https://addons.mozilla.org/en-US/firefox/addon/romanian-language-pack/", "ro-RO"],
+        ["ru", "https://addons.mozilla.org/en-US/firefox/addon/russian-ru-language-pack/", "ru-RU"],
+        ["sk", "https://addons.mozilla.org/en-US/firefox/addon/slovak-sk-language-pack/", "sk-SK"],
+        ["sl", "https://addons.mozilla.org/en-US/firefox/addon/slovenski-jezik-language-pa/", "sl-SI"],
+        ["sr", "https://addons.mozilla.org/en-US/firefox/addon/%D1%81%D1%80%D0%BF%D1%81%D0%BA%D0%B8-sr-language-pack/", "sr-RS"],
+        ["sv-SE", "https://addons.mozilla.org/en-US/firefox/addon/svenska-se-language-pack/", "sv-SE"],
+        ["th", "https://addons.mozilla.org/en-US/firefox/addon/thai-language-pack/", "th-TH"],
+        ["tr", "https://addons.mozilla.org/en-US/firefox/addon/t%C3%BCrk%C3%A7e-tr-language-pack/", "tr-TR"],
+        ["uk", "https://addons.mozilla.org/en-US/firefox/addon/ukrainian-language-pack/", "uk-UA"],
+        ["vi", "https://addons.mozilla.org/en-US/firefox/addon/vietnamese-language-pack/", "vi-VN"],
+        ["zh-CN", "https://addons.mozilla.org/en-US/firefox/addon/chinese-simplified-zh-cn-la/"],
+        ["zh-TW", "https://addons.mozilla.org/en-US/firefox/addon/traditional-chinese-zh-tw-l/"]
     ]
     
     # Can be a string or a dict containing 'file' and 'patterns'
     entries = [
-        "chrome/{0}/locale/{0}/global/dateFormat.properties",
+        #"chrome/{0}/locale/{0}/global/dateFormat.properties",
         "chrome/{0}/locale/{0}/global/editMenuOverlay.dtd",
         {
             "file": "chrome/{0}/locale/{0}/global/intl.properties",
             "grep_patterns": [
-                "^general.useragent.locale",
                 "^pluralRule",
                 "^intl.accept_languages"
             ]
@@ -113,23 +114,30 @@ def main():
         if not os.path.exists(locale_dir):
             os.mkdir(locale_dir)
             
-        file_name = url.split("/")[-1]
-        pack_file = os.path.join(pack_dir, file_name)
-        
         if not first:
             print()
         first = False
-        if use_cache and os.path.isfile(pack_file):
-            print("Using cached file for " + pack_file)
-        else:
-            print("Downloading " + url)
-            with urllib.request.urlopen(url) as response, open(pack_file, 'wb') as f:
-                code = response.getcode()
-                if code != 200:
-                    sys.sterr.write("Got {0} for {1}\n".format(code, url))
-                    return 1
-                
-                shutil.copyfileobj(response, f)
+        
+        print("Loading from " + url)
+        with urllib.request.urlopen(url) as response:
+            code = response.getcode()
+            if code != 200:
+                sys.sterr.write("Got {0} for {1}\n".format(code, url))
+                return 1
+            
+            html = str(response.read(), 'utf-8')
+            xpi_url = json.loads(
+                '"' + re.match('.*(https:[^"]+\.xpi)', html, flags=re.DOTALL).group(1) + '"'
+            )
+            file_name = xpi_url.split("/")[-1]
+            pack_file = os.path.join(pack_dir, file_name)
+            
+            if use_cache and os.path.isfile(pack_file):
+                print("Using cached file for " + pack_file)
+            else:
+                print("Downloading " + xpi_url)
+                with urllib.request.urlopen(xpi_url) as response, open(pack_file, 'wb') as f:
+                    shutil.copyfileobj(response, f)
         
         # Unzip selected files straight to target locale dirs
         with zipfile.ZipFile(pack_file, "r") as zip_ref:
@@ -173,18 +181,11 @@ def main():
                             # Filter lines based on grep patterns
                             if isinstance(entry, dict) and entry['grep_patterns']:
                                 lines_to_write = []
+                                
                                 for line in source:
                                     line_str = str(line, 'utf-8')
                                     for p in entry['grep_patterns']:
                                         if re.search(re.compile(p), line_str):
-                                            # Use our locale tag, not the bundled one
-                                            if 'general.useragent.locale' in p:
-                                                line = re.sub(
-                                                    r'=.+', '={0}'.format(locale),
-                                                    line_str
-                                                )
-                                                line = line.encode('utf-8')
-                                            
                                             lines_to_write.append(line)
                                             continue
                                 
@@ -228,15 +229,18 @@ def main():
     
     # Date format overrides
     # https://github.com/zotero/zotero/pull/1156
-    date_formats['fr-FR']['short'][5] = 'juin'
-    date_formats['fr-FR']['short'][6] = 'juil'
-    date_formats['fr-FR']['short'][11] = 'déc'
+    #date_formats['fr-FR']['short'][5] = 'juin'
+    #date_formats['fr-FR']['short'][6] = 'juil'
+    #date_formats['fr-FR']['short'][11] = 'déc'
     
     # Write dateFormats.json from the extracted data
-    date_formats_path = os.path.join(schema_dir, 'dateFormats.json')
-    print("Writing " + date_formats_path);
-    with open(date_formats_path, 'w') as f:
-        f.write(json.dumps(date_formats, indent='\t', ensure_ascii=False))
+    #date_formats_path = os.path.join(schema_dir, 'dateFormats.json')
+    #print("Writing " + date_formats_path);
+    #with open(date_formats_path, 'w') as f:
+    #    f.write(json.dumps(date_formats, indent='\t', ensure_ascii=False))
+    print("WARNING: dateFormat.properties is no longer processed\n")
+    
+    print("Check results before committing!")
 
 
 def get_entry_path(entry):
