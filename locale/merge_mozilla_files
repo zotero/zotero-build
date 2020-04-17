@@ -40,6 +40,7 @@ def main():
         ["eu", "https://addons.mozilla.org/en-US/firefox/addon/basque-language-pack/", "eu-ES"],
         ["fa", "https://addons.mozilla.org/en-US/firefox/addon/persian-ir-%D9%81%D8%A7%D8%B1%D8%B3%DB%8C-%D8%A7%DB%8C%D8%B1%D8%A7%D9%86-lang/"],
         ["fi", "https://addons.mozilla.org/en-US/firefox/addon/finnish-language-pack/", "fi-FI"],
+        ["gl", "https://addons.mozilla.org/en-US/firefox/addon/galician-galiza-language-pack/", "gl-ES"],
         ["he", "https://addons.mozilla.org/en-US/firefox/addon/hebrew-il-language-pack/", "he-IL"],
         ["hr", "https://addons.mozilla.org/en-US/firefox/addon/hrvatski-hr-language-pack/", "hr-HR"],
         ["hu", "https://addons.mozilla.org/en-US/firefox/addon/magyar-nyelvi/", "hu-HU"],
