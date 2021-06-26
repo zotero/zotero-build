@@ -132,7 +132,10 @@ print("")
 
 for d in final_dictionaries:
     print("Downloading {}".format(d['url']))
-    urllib.request.urlretrieve(d['url'], 'dictionaries/' + d['id'] + '.xpi')
+    urllib.request.urlretrieve(
+        d['url'],
+        'dictionaries/' + d['id'] + '-' + d['version'] + '.xpi'
+    )
     del(d['url'])
 
 with open('dictionaries/dictionaries.json', 'w', encoding='utf-8') as f:
