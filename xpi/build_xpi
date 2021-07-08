@@ -160,6 +160,8 @@ def main():
         # Build translator index
         index = OrderedDict()
         for fn in sorted((fn for fn in os.listdir(translators_dir)), key=str.lower):
+            if not fn.endswith('.js'):
+                continue
             with open(os.path.join(translators_dir, fn), 'r', encoding='utf-8') as f:
                 contents = f.read()
             # Parse out the JSON metadata block
