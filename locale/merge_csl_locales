@@ -8,12 +8,10 @@ import shutil
 import xml.etree.ElementTree as ET
 import unicodedata
 
-LOCALES_GIT_REF = "bd8d2dbc85713b192d426fb02749475df30f0d2c"
+LOCALES_GIT_REF = "master"
 
 
 def main():
-    use_cache = True
-
     script_dir = os.path.dirname(os.path.realpath(__file__))
     if len(sys.argv) < 2 or not os.path.isdir(sys.argv[1]):
         sys.stderr.write(
@@ -93,21 +91,13 @@ def main():
         if not os.path.exists(pack_dir):
             os.makedirs(pack_dir)
 
-        pack_file = os.path.join(pack_dir, f"{lang}.xml")
-
-        if use_cache and os.path.isfile(pack_file):
-            print("Using cached file for " + pack_file)
-        else:
-            print("Loading from " + url)
-            with urllib.request.urlopen(url) as response:
-                code = response.getcode()
-                if code != 200:
-                    sys.sterr.write("Got {0} for {1}\n".format(code, url))
-                    return 1
-                with open(pack_file, "wb") as f:
-                    shutil.copyfileobj(response, f)
-
-        xml = ET.parse(pack_file)
+        print("Loading from " + url)
+        with urllib.request.urlopen(url) as response:
+            code = response.getcode()
+            if code != 200:
+                sys.stderr.write("Got {0} for {1}\n".format(code, url))
+                return 1
+            xml = ET.parse(response)
 
         # first, pull out all the translations for "edition", "editions", and "ed."
         edition_locators = set()
@@ -143,10 +133,11 @@ def main():
 
     number_formats[
         "credit"
-    ] = f"Generated from the CSL locales repository <https://github.com/citation-style-language/locales/tree/{LOCALES_GIT_REF}>."
+    ] = f"Generated from the CSL locales repository <https://github.com/citation-style-language/locales/tree/{LOCALES_GIT_REF}> by https://github.com/zotero/zotero-build/blob/master/locale/merge_csl_locales"
 
     with open(os.path.join(schema_dir, "numberFormats.json"), "w") as outfile:
         json.dump(number_formats, outfile, ensure_ascii=False, indent=2)
+        print(f'Saved combined locales to {os.path.join(schema_dir, "numberFormats.json")}')
 
 
 def get_all_values(elem):
