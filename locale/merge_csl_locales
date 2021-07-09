@@ -86,10 +86,6 @@ def main():
 
     for lang in language_packs:
         url = csl_locale_base.format(ref=LOCALES_GIT_REF, lang=lang)
-        pack_dir = os.path.join(script_dir, "csl_packs", lang)
-
-        if not os.path.exists(pack_dir):
-            os.makedirs(pack_dir)
 
         print("Loading from " + url)
         with urllib.request.urlopen(url) as response:
