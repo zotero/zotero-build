@@ -143,10 +143,6 @@ def main():
             '-delete'
         ])
         
-        # Delete test files
-        test_dir = os.path.join(tmp_src_dir, 'test')
-        shutil.rmtree(test_dir)
-        
         # Delete styles build script
         os.remove(os.path.join(tmp_src_dir, 'styles', 'update'))
         
