@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/zotero/zotero-build/issues"
   },
-  "homepage": "https://github.com/zotero/zotero-build#readme"
+  "homepage": "https://github.com/zotero/zotero-build#readme",
+  "devDependencies": {
+    "acorn": "^8.8.2"
+  }
 }

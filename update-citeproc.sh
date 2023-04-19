@@ -23,12 +23,12 @@ curl -f https://raw.githubusercontent.com/Juris-M/citeproc-js/$tag/citeproc.js >
 
 echo
 
-if [ `command -v js` ]; then
+if [ `command -v acorn` ]; then
 	echo "Verifying file..."
-	js -c "$outFile"
+	acorn --silent "$outFile"
 	if [ $? = 0 ]; then
 		echo "OK"
 	fi
 else
-	echo "Warning: js isn't installed -- not verifying file"
+	echo "Warning: acorn isn't installed -- not verifying file"
 fi
