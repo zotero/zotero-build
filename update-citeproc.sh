@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/bin/bash -e
+
 ZOTEROSRC="../zotero"
 if [ -e "./config.sh" ]; then
 	. ./config.sh
@@ -18,7 +19,7 @@ if [ ! -e "$outFile" ]; then
 	exit 78 # EX_CONFIG: configuration error (from sysexits.h)
 fi
 
-curl https://raw.githubusercontent.com/Juris-M/citeproc-js/$tag/citeproc.js > "$outFile"
+curl -f https://raw.githubusercontent.com/Juris-M/citeproc-js/$tag/citeproc.js > "$outFile"
 
 echo
 
