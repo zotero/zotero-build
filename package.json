@@ -15,8 +15,5 @@
   "bugs": {
     "url": "https://github.com/zotero/zotero-build/issues"
   },
-  "homepage": "https://github.com/zotero/zotero-build#readme",
-  "dependencies": {
-    "sqlite": "^3.0.3"
-  }
+  "homepage": "https://github.com/zotero/zotero-build#readme"
 }
