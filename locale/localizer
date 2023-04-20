@@ -1,5 +1,5 @@
-#!/usr/bin/php
-<?
+#!/usr/bin/env php
+<?php
 error_reporting(E_ALL);
 
 $english_path = 'en-US-new'; // New English locale
