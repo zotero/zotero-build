@@ -35,6 +35,7 @@ def main():
         ["el", "https://addons.mozilla.org/en-US/firefox/addon/greek-gr-language-pack/", "el-GR"],
         ["en-GB", "https://addons.mozilla.org/en-US/firefox/addon/english-gb-language-pack/"],
         ["es-ES", "https://addons.mozilla.org/en-US/firefox/addon/espa%C3%B1ol-espa%C3%B1a-language-pac/"],
+        ["eu", "https://addons.mozilla.org/en-US/firefox/addon/basque-language-pack/", "eu-ES"],
         ["fr", "https://addons.mozilla.org/en-US/firefox/addon/fran%C3%A7ais-language-pack/", "fr-FR"],
         ["et", "https://addons.mozilla.org/en-US/firefox/addon/eesti-et-keele-pakk/", "et-EE"],
         ["eu", "https://addons.mozilla.org/en-US/firefox/addon/basque-language-pack/", "eu-ES"],
